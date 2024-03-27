@@ -160,84 +160,60 @@ getRow proc
     getRow endp
 
 getColumn proc
-        push bp
-        mov bp, sp
+    push bp
+    mov bp, sp
 
-        mov al, [bp+4] ; N
-        cmp al, 1
-        jl errorgetColumn
-        cmp al, 50
-        jg errorgetColumn
+    mov ax, [bp+4] ; N
 
-        mov ah, 0
-        mov bl, 10
-        div bl
+    ; Call getRow function to check if row is even or odd
+    push ax         ; Save N on the stack
+    call getRow     ; AX now contains row value
+    pop bx          ; Restore N in BX register
 
-        cmp ah, 0
-        je case0
-        cmp ah, 1
-        je case1
-        cmp ah, 2
-        je case2
-        cmp ah, 3
-        je case3
-        cmp ah, 4
-        je case4
-        cmp ah, 5
-        je case5
-        cmp ah, 6
-        je case6
-        cmp ah, 7
-        je case7
-        cmp ah, 8
-        je case8
-        cmp ah, 9
-        je case9
+    ; Check if row is even or odd
+    test al, 1      ; Check if least significant bit is set
+    jnz odd_row     ; Jump to odd_row if odd
 
-    errorgetColumn:
-        lea dx, error1
-        mov ah, 09h
-        int 21h
-        mov al, 0
+    ; Even row
+    mov ax, N      ; Move N back to AX register
+    mov cl, 10      ; Set CL to 10 for division
+    mov dx, 0
+    div cl          ; Divide AX by 10 (quotient in AX, remainder in DL)
+    cmp ah, 0       ; Check if remainder is 0
+    je last_column  ; Jump to last_column if remainder is 0
 
-        jmp donegetColumn
+    ; Calculate column value for even row
+    mov ax, N
+    mov cl, 10
+    mov dx, 0
+    div cl
+    mov al, ah
+    mov ah, 0
+    mov cx, 2
+    mul cx
+    sub ax, 11
+    jmp done_column ; Jump to done_column
 
-    case0:
-        mov al, 9
-        jmp donegetColumn
-    case1:
-        mov al, 2
-        jmp donegetColumn
-    case2:
-        mov al, 4
-        jmp donegetColumn
-    case3:
-        mov al, 6
-        jmp donegetColumn
-    case4:
-        mov al, 8
-        jmp donegetColumn
-    case5:
-        mov al, 10
-        jmp donegetColumn
-    case6:
-        mov al, 1
-        jmp donegetColumn
-    case7:
-        mov al, 3
-        jmp donegetColumn
-    case8:
-        mov al, 5
-        jmp donegetColumn
-    case9:
-        mov al, 7
-        jmp donegetColumn
+odd_row:
+    ; Odd row
+    mov ax, N
+    mov cl, 10
+    mov dx, 0
+    div cl
+    mov al, ah
+    mov ah, 0
+    mov cx, 2
+    mul cx
+    jmp done_column ; Jump to done_column
 
-    donegetColumn:
-        pop bp
-        ret
+last_column:
+    mov ax, 9       ; Set column value to 9 for last column
 
-    getColumn endp
+done_column:
+    pop bp
+    ret
+
+getColumn endp
 
 getSquareNumber proc
         push bp
