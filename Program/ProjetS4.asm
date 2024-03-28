@@ -15,6 +15,7 @@
     prompt3 dw 'Entrez une colonne j entre 1 et 10 : $'
     error1 dw 'Erreur : N doit etre entre 1 et 50.', 0Dh, 0Ah, '$'
     error2 dw 'Erreur : i et j doivent etre entre 1 et 10.', 0Dh, 0Ah, '$'
+    errorcaseblanche db 'Case blanche', 0Dh, 0Ah, '$'
     msgrow dw 'La ligne est : $'
     msgcolumn dw 'La colonne est : $'
     msgsquare dw 'Le numero du carre est : $'
@@ -23,6 +24,10 @@
     error           db      cr, lf, 'the number is out of range!',
     make_minus      db      ?       ; used as a flag in procedures.
     ten             dw      10      ; used as multiplier.
+    msgblanche db 'Blanche$'
+    msgnoire db 'Noire$'
+    msgcolor db 'La couleur de la case est : $'
+    
 
 .code
 main proc
@@ -123,6 +128,40 @@ main proc
         mov ah, 0
         call print_decimal
 
+        ; print newline
+        lea dx, newline
+        mov ah, 9
+        int 21h
+
+        ; Prompt user for input i
+        lea dx, prompt2
+        call puts
+        call scan_num
+        mov i, cx
+
+        ; print newline
+        lea dx, newline
+        mov ah, 9
+        int 21h
+
+        ; Prompt user for input j
+        lea dx, prompt3
+        call puts
+        call scan_num
+        mov j, cx
+
+        ; Call getsquarecolor function
+        mov ax, i
+        mov bx, j
+        call getSquareColor
+
+        ; print newline
+        lea dx, newline
+        mov ah, 9
+        int 21h
+
+
+
     exit:
         mov ah, 4Ch
         int 21h
@@ -133,7 +172,7 @@ getRow proc
         push bp
         mov bp, sp
 
-        mov al, [bp+4] ; N
+        mov ax, N
         cmp al, 1
         jl errorgetRow
         cmp al, 50
@@ -148,12 +187,19 @@ getRow proc
         jmp donegetRow
 
     errorgetRow:
+
+        ;new line
+        lea dx, newline
+        mov ah, 9
+        int 21h
+
         lea dx, error1
         mov ah, 09h
         int 21h
-        mov al, 0
+        mov ax, 0
 
     donegetRow:
+        mov ah, 0
         pop bp
         ret
 
@@ -163,7 +209,11 @@ getColumn proc
     push bp
     mov bp, sp
 
-    mov ax, [bp+4] ; N
+    mov ax, N
+    cmp al, 1
+    jl errorgetcolumn
+    cmp al, 50
+    jg errorgetcolumn
 
     ; Call getRow function to check if row is even or odd
     push ax         ; Save N on the stack
@@ -209,7 +259,22 @@ odd_row:
 last_column:
     mov ax, 9       ; Set column value to 9 for last column
 
+    jmp done_column
+
+errorgetcolumn:
+
+        ;new line
+        lea dx, newline
+        mov ah, 9
+        int 21h
+
+        lea dx, error1
+        mov ah, 09h
+        int 21h
+        mov ax, 0
+
 done_column:
+    mov ah, 0
     pop bp
     ret
 
@@ -235,7 +300,7 @@ getSquareNumber proc
         div bl
 
         cmp ah, 0
-        je errorgetSquareNumber
+        je msgcaseblanche
 
         mov dx, i
         sub dl, 1
@@ -255,16 +320,88 @@ getSquareNumber proc
         jmp donegetSquareNumber
 
     errorgetSquareNumber:
+
+        ;new line
+        lea dx, newline
+        mov ah, 9
+        int 21h
+
         lea dx, error2
         mov ah, 09h
         int 21h
-        mov al, 0
+        mov ax, 0
+
+    jmp donegetSquareNumber
+
+    msgcaseblanche:
+
+        ;new line
+        lea dx, newline
+        mov ah, 9
+        int 21h
+
+        lea dx, errorcaseblanche
+        mov ah, 09h
+        int 21h
+        mov ax, 0
 
     donegetSquareNumber:
+        mov ah, 0
         pop bp
         ret
 
     getSquareNumber endp
+
+getSquareColor proc
+    push bp
+    mov bp, sp
+
+    mov ax, i
+    mov bx, j
+    call getSquareNumber
+    cmp ax, 0
+    je white_square
+
+    ;new line
+    lea dx, newline
+    mov ah, 9
+    int 21h
+
+    lea dx, msgcolor
+    call puts
+    lea dx, msgnoire
+    call puts
+    jmp done_color
+
+    white_square:
+        mov ax, i
+        mov bx, j
+
+        cmp al, 1
+        jl done_color
+        cmp al, 10
+        jg done_color
+
+        cmp bl, 1
+        jl done_color
+        cmp bl, 10
+        jg done_color
+
+        ;new line
+        lea dx, newline
+        mov ah, 9
+        int 21h
+
+        lea dx, msgcolor
+        call puts
+        lea dx, msgblanche
+        call puts
+
+    done_color:
+        pop bp
+        ret
+
+getSquareColor endp
 
 puts    proc    near
         push    ax
