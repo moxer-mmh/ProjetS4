@@ -27,7 +27,13 @@
     msgblanche db 'Blanche$'
     msgnoire db 'Noire$'
     msgcolor db 'La couleur de la case est : $'
-    
+    msgstate db 'L''etat de la case est : $'
+    msgvide db 'Case vide$'
+    msgpionblanc db 'Pion blanc$'
+    msgpionnoir db 'Pion noir$'
+    msgdameblanche db 'Dame blanche$'
+    msgdamenoire db 'Dame noire$'
+    board db 50 dup(0)
 
 .code
 main proc
@@ -154,6 +160,37 @@ main proc
         mov ax, i
         mov bx, j
         call getSquareColor
+
+        ; print newline
+        lea dx, newline
+        mov ah, 9
+        int 21h
+
+        mov board[12], 1  ; Pion blanc en (3, 4)
+        mov board[17], 2  ; Pion noir en (4, 5)
+        mov board[26], 3  ; Dame blanche en (6, 3)
+
+        ; Prompt user for input i
+        lea dx, prompt2
+        call puts
+        call scan_num
+        mov i, cx
+
+        ; print newline
+        lea dx, newline
+        mov ah, 9
+        int 21h
+
+        ; Prompt user for input j
+        lea dx, prompt3
+        call puts
+        call scan_num
+        mov j, cx
+
+        ; Call displaySquareState function
+        mov ax, i
+        mov bx, j
+        call displaySquareState
 
         ; print newline
         lea dx, newline
@@ -402,6 +439,96 @@ getSquareColor proc
         ret
 
 getSquareColor endp
+
+displaySquareState proc
+    push bp
+    mov bp, sp
+
+    mov ax, i
+    mov bx, j
+    call getSquareNumber
+    mov si, ax
+    cmp ax, 0
+    je whitesquare
+
+    ;new line
+    lea dx, newline
+    mov ah, 9
+    int 21h
+
+    lea dx, msgstate
+    call puts
+
+    mov dl, board[si]
+    cmp dl, 0
+    je case_vide
+    cmp dl, 1
+    je pion_blanc
+    cmp dl, 2
+    je pion_noir
+    cmp dl, 3
+    je dame_blanche
+    cmp dl, 4
+    je dame_noire
+
+    whitesquare:
+        mov ax, i
+        mov bx, j
+
+        cmp al, 1
+        jl done_color
+        cmp al, 10
+        jg done_color
+
+        cmp bl, 1
+        jl done_color
+        cmp bl, 10
+        jg done_color
+
+        ;new line
+        lea dx, newline
+        mov ah, 9
+        int 21h
+
+        lea dx, errorcaseblanche
+        call puts
+
+        jmp done_state
+
+    case_vide:
+
+        lea dx, msgvide
+        call puts
+        jmp done_state
+
+    pion_blanc:
+
+        lea dx, msgpionblanc
+        call puts
+        jmp done_state
+
+    pion_noir:
+
+        lea dx, msgpionnoir
+        call puts
+        jmp done_state
+
+    dame_blanche:
+
+        lea dx, msgdameblanche
+        call puts
+        jmp done_state
+
+    dame_noire:
+
+        lea dx, msgdamenoire
+        call puts
+
+    done_state:
+        pop bp
+        ret
+
+displaySquareState endp
 
 puts    proc    near
         push    ax
