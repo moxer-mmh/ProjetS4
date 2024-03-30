@@ -95,80 +95,8 @@ main proc
         mov ah, 9
         int 21h
 
-        ; Prompt user for input i
-        lea dx, prompt2
-        call puts
-        call scan_num
-        mov i, cx
-
-        ; print newline
-        lea dx, newline
-        mov ah, 9
-        int 21h
-
-        ; Prompt user for input j
-        lea dx, prompt3
-        call puts
-        call scan_num
-        mov j, cx
-
-        ; Call getSquareNumber function
-        mov ax, i
-        mov bx, j
-        call getSquareNumber
-        mov squareNumber, ax
-
-        ; Check if squareNumber is 0
-        cmp squareNumber, 0
-        je exit
-
-        ; print newline
-        lea dx, newline
-        mov ah, 9
-        int 21h
-
-        ; Display squareNumber
-        lea dx, msgsquare
-        call puts
-        mov ax, squareNumber
-        mov ah, 0
-        call print_decimal
-
-        ; print newline
-        lea dx, newline
-        mov ah, 9
-        int 21h
-
-        ; Prompt user for input i
-        lea dx, prompt2
-        call puts
-        call scan_num
-        mov i, cx
-
-        ; print newline
-        lea dx, newline
-        mov ah, 9
-        int 21h
-
-        ; Prompt user for input j
-        lea dx, prompt3
-        call puts
-        call scan_num
-        mov j, cx
-
-        ; Call getsquarecolor function
-        mov ax, i
-        mov bx, j
-        call getSquareColor
-
-        ; print newline
-        lea dx, newline
-        mov ah, 9
-        int 21h
-
-        mov board[12], 1  ; Pion blanc en (3, 4)
-        mov board[17], 2  ; Pion noir en (4, 5)
-        mov board[26], 3  ; Dame blanche en (6, 3)
+       ;call initialiserDamier
+        call InitialiserDamier
 
         ; Prompt user for input i
         lea dx, prompt2
@@ -529,6 +457,44 @@ displaySquareState proc
         ret
 
 displaySquareState endp
+
+InitialiserDamier proc
+    push ax
+    push bx
+    push cx
+    push dx
+
+    mov cx, 0       ; Initialize loop counter to 0
+    mov bx, offset board ; Get the offset of the board array
+
+loop_init:
+    cmp cx, 20      ; Check if index is less than 20
+    jle init_black   ; Jump to init_black if index is less than 20
+    cmp cx, 30      ; Check if index is greater than 29
+    jg init_white  ; Jump to init_white if index is greater than or equal to 30
+    mov [bx], 0     ; Set the current board element to EMPTY (0)
+    jmp next_index
+
+init_black:
+    mov [bx], 2     ; Set the current board element to BLACK_PAWN (2)
+    jmp next_index
+
+init_white:
+    mov [bx], 1     ; Set the current board element to WHITE_PAWN (1)
+
+next_index:
+    inc bx          ; Move to the next element in the board array
+    inc cx          ; Increment the loop counter
+    cmp cx, 50      ; Check if all 50 elements have been initialized
+    jle loop_init    ; Continue the loop if not all elements have been initialized
+
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+    ret
+
+InitialiserDamier endp
 
 puts    proc    near
         push    ax
