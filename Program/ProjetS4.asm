@@ -2,128 +2,46 @@
 .stack 100h
 
 .data
-    
+    board db 50 dup(0)
     N dw ?
     i dw ?
     j dw ?
-    row dw ?
-    column dw ?
-    squareNumber dw ?
+    x dw ?
+    y dw ?
+    WHITE           equ     'w'
+    BLACK           equ     'b'
+    EMPTY           equ     0
+    WHITE_PAWN      equ     1
+    BLACK_PAWN      equ     2
+    WHITE_QUEEN     equ     3
+    BLACK_QUEEN     equ     4
+    player          db      WHITE
+    capturepossible db      0
+    coor            dw      2 dup(0)
     newline        dw     0Dh,0Ah, '$'
-    prompt1 dw 'Entrez un numero N entre 1 et 50 : $'
-    prompt2 dw 'Entrez une ligne i entre 1 et 10 : $'
-    prompt3 dw 'Entrez une colonne j entre 1 et 10 : $'
     error1 dw 'Erreur : N doit etre entre 1 et 50.', 0Dh, 0Ah, '$'
     error2 dw 'Erreur : i et j doivent etre entre 1 et 10.', 0Dh, 0Ah, '$'
-    errorcaseblanche db 'Case blanche', 0Dh, 0Ah, '$'
-    msgrow dw 'La ligne est : $'
-    msgcolumn dw 'La colonne est : $'
-    msgsquare dw 'Le numero du carre est : $'
+
+    white_empty db '  ', '$'
+    black_empty db '. ', '$'
+    white_pawn db ' W ', '$'
+    black_pawn db ' B ', '$'
+    white_queen db 'WD ', '$'
+    black_queen db 'BD ', '$'
+
     cr              equ     0Dh
     lf              equ     0Ah
     error           db      cr, lf, 'the number is out of range!',
-    make_minus      db      ?       ; used as a flag in procedures.
-    ten             dw      10      ; used as multiplier.
-    msgblanche db 'Blanche$'
-    msgnoire db 'Noire$'
-    msgcolor db 'La couleur de la case est : $'
-    msgstate db 'L''etat de la case est : $'
-    msgvide db 'Case vide$'
-    msgpionblanc db 'Pion blanc$'
-    msgpionnoir db 'Pion noir$'
-    msgdameblanche db 'Dame blanche$'
-    msgdamenoire db 'Dame noire$'
-    board db 50 dup(0)
+    make_minus      dw      ?
+    ten             dw      10
 
 .code
 main proc
         mov ax, @data
         mov ds, ax
 
-        ; Prompt user for input
-        lea dx, prompt1
-        call puts
-        call scan_num
-        mov N, cx
-
-        ; Call getRow function
-        mov ax, N
-        call getRow
-        mov row, ax
-
-        ; Check if row is 0
-        cmp row, 0
-        je exit
-
-        ; print newline
-        lea dx, newline
-        mov ah, 9
-        int 21h
-
-        ; Display row
-        lea dx, msgrow
-        call puts
-        mov ax, row
-        mov ah, 0
-        call print_decimal
-
-
-        ; Call getColumn function
-        mov ax, N
-        call getColumn
-        mov column, ax
-
-        ; Check if column is 0
-        cmp column, 0
-        je exit
-
-        ; print newline
-        lea dx, newline
-        mov ah, 9
-        int 21h
-
-        ; Display column
-        lea dx, msgcolumn
-        call puts
-        mov ax, column
-        mov ah, 0
-        call print_decimal
-
-
-        ; print newline
-        lea dx, newline
-        mov ah, 9
-        int 21h
-
-       ;call initialiserDamier
         call InitialiserDamier
-
-        ; Prompt user for input i
-        lea dx, prompt2
-        call puts
-        call scan_num
-        mov i, cx
-
-        ; print newline
-        lea dx, newline
-        mov ah, 9
-        int 21h
-
-        ; Prompt user for input j
-        lea dx, prompt3
-        call puts
-        call scan_num
-        mov j, cx
-
-        ; Call displaySquareState function
-        mov ax, i
-        mov bx, j
-        call displaySquareState
-
-        ; print newline
-        lea dx, newline
-        mov ah, 9
-        int 21h
+        call AfficherDamier
 
 
 
@@ -153,14 +71,11 @@ getRow proc
 
     errorgetRow:
 
-        ;new line
         lea dx, newline
-        mov ah, 9
-        int 21h
+        call puts
 
         lea dx, error1
-        mov ah, 09h
-        int 21h
+        call puts
         mov ax, 0
 
     donegetRow:
@@ -180,24 +95,20 @@ getColumn proc
     cmp al, 50
     jg errorgetcolumn
 
-    ; Call getRow function to check if row is even or odd
-    push ax         ; Save N on the stack
-    call getRow     ; AX now contains row value
-    pop bx          ; Restore N in BX register
+    push ax
+    call getRow
+    pop bx
 
-    ; Check if row is even or odd
-    test al, 1      ; Check if least significant bit is set
-    jnz odd_row     ; Jump to odd_row if odd
+    test al, 1
+    jnz odd_row
 
-    ; Even row
-    mov ax, N      ; Move N back to AX register
-    mov cl, 10      ; Set CL to 10 for division
+    mov ax, N
+    mov cl, 10
     mov dx, 0
-    div cl          ; Divide AX by 10 (quotient in AX, remainder in DL)
-    cmp ah, 0       ; Check if remainder is 0
-    je last_column  ; Jump to last_column if remainder is 0
+    div cl
+    cmp ah, 0
+    je last_column
 
-    ; Calculate column value for even row
     mov ax, N
     mov cl, 10
     mov dx, 0
@@ -207,10 +118,9 @@ getColumn proc
     mov cx, 2
     mul cx
     sub ax, 11
-    jmp done_column ; Jump to done_column
+    jmp done_column
 
 odd_row:
-    ; Odd row
     mov ax, N
     mov cl, 10
     mov dx, 0
@@ -219,23 +129,20 @@ odd_row:
     mov ah, 0
     mov cx, 2
     mul cx
-    jmp done_column ; Jump to done_column
+    jmp done_column
 
 last_column:
-    mov ax, 9       ; Set column value to 9 for last column
+    mov ax, 9
 
     jmp done_column
 
 errorgetcolumn:
 
-        ;new line
         lea dx, newline
-        mov ah, 9
-        int 21h
+        call puts
 
         lea dx, error1
-        mov ah, 09h
-        int 21h
+        call puts
         mov ax, 0
 
 done_column:
@@ -248,6 +155,9 @@ getColumn endp
 getSquareNumber proc
         push bp
         mov bp, sp
+
+        mov ax, i
+        mov bx, j
 
         cmp al, 1
         jl errorgetSquareNumber
@@ -265,7 +175,7 @@ getSquareNumber proc
         div bl
 
         cmp ah, 0
-        je msgcaseblanche
+        je caseblanche
 
         mov dx, i
         sub dl, 1
@@ -286,28 +196,17 @@ getSquareNumber proc
 
     errorgetSquareNumber:
 
-        ;new line
         lea dx, newline
-        mov ah, 9
-        int 21h
+        call puts
 
         lea dx, error2
-        mov ah, 09h
-        int 21h
+        call puts
         mov ax, 0
 
     jmp donegetSquareNumber
 
-    msgcaseblanche:
+    caseblanche:
 
-        ;new line
-        lea dx, newline
-        mov ah, 9
-        int 21h
-
-        lea dx, errorcaseblanche
-        mov ah, 09h
-        int 21h
         mov ax, 0
 
     donegetSquareNumber:
@@ -323,43 +222,40 @@ getSquareColor proc
 
     mov ax, i
     mov bx, j
+
+    cmp al, 1
+    jl errorgetSquareColor
+    cmp al, 10
+    jg errorgetSquareColor
+    cmp bl, 1
+    jl errorgetSquareColor
+    cmp bl, 10
+    jg errorgetSquareColor
+
+
+    mov ax, i
+    mov bx, j
+
     call getSquareNumber
     cmp ax, 0
     je white_square
 
-    ;new line
-    lea dx, newline
-    mov ah, 9
-    int 21h
 
-    lea dx, msgcolor
-    call puts
-    lea dx, msgnoire
-    call puts
+    mov ax, BLACK
     jmp done_color
 
     white_square:
-        mov ax, i
-        mov bx, j
 
-        cmp al, 1
-        jl done_color
-        cmp al, 10
-        jg done_color
+        mov ax, WHITE
 
-        cmp bl, 1
-        jl done_color
-        cmp bl, 10
-        jg done_color
+        jmp done_color
 
-        ;new line
+    errorgetSquareColor:
+
         lea dx, newline
-        mov ah, 9
-        int 21h
-
-        lea dx, msgcolor
         call puts
-        lea dx, msgblanche
+
+        lea dx, error2
         call puts
 
     done_color:
@@ -376,16 +272,7 @@ displaySquareState proc
     mov bx, j
     call getSquareNumber
     mov si, ax
-    cmp ax, 0
-    je whitesquare
 
-    ;new line
-    lea dx, newline
-    mov ah, 9
-    int 21h
-
-    lea dx, msgstate
-    call puts
 
     mov dl, board[si]
     cmp dl, 0
@@ -399,58 +286,30 @@ displaySquareState proc
     cmp dl, 4
     je dame_noire
 
-    whitesquare:
-        mov ax, i
-        mov bx, j
-
-        cmp al, 1
-        jl done_color
-        cmp al, 10
-        jg done_color
-
-        cmp bl, 1
-        jl done_color
-        cmp bl, 10
-        jg done_color
-
-        ;new line
-        lea dx, newline
-        mov ah, 9
-        int 21h
-
-        lea dx, errorcaseblanche
-        call puts
-
-        jmp done_state
 
     case_vide:
 
-        lea dx, msgvide
-        call puts
+        mov ax, EMPTY
         jmp done_state
 
     pion_blanc:
 
-        lea dx, msgpionblanc
-        call puts
+        mov ax, WHITE_PAWN
         jmp done_state
 
     pion_noir:
 
-        lea dx, msgpionnoir
-        call puts
+        mov ax, BLACK_PAWN
         jmp done_state
 
     dame_blanche:
 
-        lea dx, msgdameblanche
-        call puts
+        mov ax, WHITE_QUEEN
         jmp done_state
 
     dame_noire:
 
-        lea dx, msgdamenoire
-        call puts
+        mov ax, BLACK_QUEEN
 
     done_state:
         pop bp
@@ -464,29 +323,30 @@ InitialiserDamier proc
     push cx
     push dx
 
-    mov cx, 0       ; Initialize loop counter to 0
-    mov bx, offset board ; Get the offset of the board array
+    mov cx, 0
+    mov bx, offset board
+
 
 loop_init:
-    cmp cx, 20      ; Check if index is less than 20
-    jle init_black   ; Jump to init_black if index is less than 20
-    cmp cx, 30      ; Check if index is greater than 29
-    jg init_white  ; Jump to init_white if index is greater than or equal to 30
-    mov [bx], 0     ; Set the current board element to EMPTY (0)
+    cmp cx, 20
+    jle init_black
+    cmp cx, 30
+    jg init_white
+    mov [bx], EMPTY
     jmp next_index
 
 init_black:
-    mov [bx], 2     ; Set the current board element to BLACK_PAWN (2)
+    mov [bx], BLACK_PAWN
     jmp next_index
 
 init_white:
-    mov [bx], 1     ; Set the current board element to WHITE_PAWN (1)
+    mov [bx], WHITE_PAWN
 
 next_index:
-    inc bx          ; Move to the next element in the board array
-    inc cx          ; Increment the loop counter
-    cmp cx, 50      ; Check if all 50 elements have been initialized
-    jle loop_init    ; Continue the loop if not all elements have been initialized
+    inc bx
+    inc cx
+    cmp cx, 50
+    jle loop_init
 
     pop dx
     pop cx
@@ -495,6 +355,24 @@ next_index:
     ret
 
 InitialiserDamier endp
+
+AfficherDamier proc
+
+ret
+AfficherDamier endp
+
+print_char proc
+    push ax
+    push dx
+
+    mov ah, 2
+    mov dl, al
+    int 21h
+
+    pop dx
+    pop ax
+    ret
+print_char endp
 
 puts    proc    near
         push    ax
@@ -605,3 +483,4 @@ print_digits:
 print_decimal endp
 
 end main
+
