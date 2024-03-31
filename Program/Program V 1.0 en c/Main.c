@@ -271,6 +271,7 @@ int deplacer(int i, int j, int x, int y) {
         player = player == WHITE ? BLACK : WHITE;
         return 1;
     }
+    return 0;
 }
 
 int main() {
