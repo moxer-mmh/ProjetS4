@@ -8,6 +8,12 @@
     j dw ?
     x dw ?
     y dw ?
+    getRow dw ?
+    getColumn dw ?
+    getSquareNumber dw ?
+    getSquareColor dw ?
+    displaySquareState dw ?
+
     WHITE           equ     'w'
     BLACK           equ     'b'
     EMPTY           equ     0
@@ -80,6 +86,7 @@ getRow proc
 
     donegetRow:
         mov ah, 0
+        mov getRow, ax
         pop bp
         ret
 
@@ -99,6 +106,7 @@ getColumn proc
     call getRow
     pop bx
 
+    mov ax, getRow
     test al, 1
     jnz odd_row
 
@@ -147,6 +155,7 @@ errorgetcolumn:
 
 done_column:
     mov ah, 0
+    mov getColumn, ax
     pop bp
     ret
 
@@ -211,6 +220,7 @@ getSquareNumber proc
 
     donegetSquareNumber:
         mov ah, 0
+        mov getSquareNumber, al
         pop bp
         ret
 
@@ -237,6 +247,7 @@ getSquareColor proc
     mov bx, j
 
     call getSquareNumber
+    mov ax, getSquareNumber
     cmp ax, 0
     je white_square
 
@@ -259,6 +270,7 @@ getSquareColor proc
         call puts
 
     done_color:
+        mov getSquareColor, ax
         pop bp
         ret
 
@@ -271,6 +283,7 @@ displaySquareState proc
     mov ax, i
     mov bx, j
     call getSquareNumber
+    mov ax, getSquareNumber
     mov si, ax
 
 
@@ -312,6 +325,7 @@ displaySquareState proc
         mov ax, BLACK_QUEEN
 
     done_state:
+        mov displaySquareState, ax
         pop bp
         ret
 
