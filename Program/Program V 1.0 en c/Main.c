@@ -9,19 +9,10 @@
 #define BLACK_QUEEN 4
 #define WHITE 'w'
 #define BLACK 'b'
-#define MAX_MOVES 2
-
-typedef struct {
-    int startRow;
-    int startCol;
-    int endRow;
-    int endCol;
-    int jumpCol;//coordonnées de la case du pion adverse sauté
-    int jumpRow;
-} IndirectMove;
-
 int board[50];
 int player = WHITE;
+int capturepossible = 0;
+int coor[2];
 
 int getRow(int N);
 int getColumn(int N);
@@ -29,7 +20,7 @@ int getSquareNumber(int i, int j);
 char getSquareColor(int i, int j);
 int displaySquareState(int i, int j);
 int verif(int i , int j , int x , int y);
-int IsThereIndirectMove(IndirectMove moves[]);
+int mustcapture();
 int deplacer(int i, int j, int x, int y);
 void AfficherDamier();
 void InitialiserDamier();
@@ -103,103 +94,39 @@ int displaySquareState(int i, int j) {
         case BLACK_QUEEN:
             return BLACK_QUEEN;
         default:
-            printf("État de la case invalide");
+            printf("Etat de la case invalide");
             break;
     }
 }
 
-int IsThereIndirectMove(IndirectMove moves[]) {
-    int currentPlayer = player == WHITE ? WHITE_PAWN : BLACK_PAWN;
-    int opponentPiece = player == WHITE ? BLACK_PAWN : WHITE_PAWN;
-    int moveCount = 0; //On traite le cas de plusieurs IndirectMove
-
-    for (int k = 1; k <= 10; k++) {
-        for (int p = 1; p <= 10; p++) {
-            int squareNumber = getSquareNumber(k, p);
-            if (board[squareNumber - 1] == currentPlayer) {
-                if (currentPlayer == BLACK_PAWN) {
-                    if (k < 9 && p < 9 && board[getSquareNumber(k + 1, p + 1) - 1] == opponentPiece && board[getSquareNumber(k + 2, p + 2) - 1] == EMPTY) {
-                        moves[moveCount].startRow = k;
-                        moves[moveCount].startCol = p;
-                        moves[moveCount].endRow = k + 2;
-                        moves[moveCount].endCol = p + 2;
-                        moves[moveCount].jumpRow = k + 1;
-                        moves[moveCount].jumpCol = p + 1;
-                        moveCount++;
-                    }
-                    if (k < 9 && p > 2 && board[getSquareNumber(k + 1, p - 1) - 1] == opponentPiece && board[getSquareNumber(k + 2, p - 2) - 1] == EMPTY) {
-                        moves[moveCount].startRow = k;
-                        moves[moveCount].startCol = p;
-                        moves[moveCount].endRow = k + 2;
-                        moves[moveCount].endCol = p - 2;
-                        moves[moveCount].jumpRow = k + 1;
-                        moves[moveCount].jumpCol = p - 1;
-                        moveCount++;
-                    }
-                } else {
-                    if (k > 2 && p < 9 && board[getSquareNumber(k - 1, p + 1) - 1] == opponentPiece && board[getSquareNumber(k - 2, p + 2) - 1] == EMPTY) {
-                        moves[moveCount].startRow = k;
-                        moves[moveCount].startCol = p;
-                        moves[moveCount].endRow = k - 2;
-                        moves[moveCount].endCol = p + 2;
-                        moves[moveCount].jumpRow = k - 1;
-                        moves[moveCount].jumpCol = p + 1;
-                        moveCount++;
-                    }
-                    if (k > 2 && p > 2 && board[getSquareNumber(k - 1, p - 1) - 1] == opponentPiece && board[getSquareNumber(k - 2, p - 2) - 1] == EMPTY) {
-                        moves[moveCount].startRow = k;
-                        moves[moveCount].startCol = p;
-                        moves[moveCount].endRow = k - 2;
-                        moves[moveCount].endCol = p - 2;
-                        moves[moveCount].jumpRow = k - 1;
-                        moves[moveCount].jumpCol = p - 1;
-                        moveCount++;
-                    }
-                }
-            }
-        }
-    }
-
-    return moveCount;
-}
-
 void AfficherDamier() {
-    // Affichage de l'en-tête de colonne
     printf("   ");
     for (int j = 1; j <= 10; j++) {
         printf("%2d ", j);
     }
     printf("\n");
 
-    // Parcours des lignes et colonnes de la matrice
     for (int i = 1; i <= 10; i++) {
-        // Affichage du numéro de ligne
         printf("%2d ", i);
 
         for (int j = 1; j <= 10; j++) {
             char squareColor = getSquareColor(i, j);
             int squareState = displaySquareState(i, j);
 
-            // Affichage des différents états de la case
             switch (squareState) {
                 case EMPTY:
-                    // Si la case est vide
                     printf((squareColor == WHITE) ? "   " : " . ");
                     break;
                 case WHITE_PAWN:
-                    // Si la case contient un pion blanc
                     printf(" W ");
                     break;
                 case BLACK_PAWN:
-                    // Si la case contient un pion noir
                     printf(" B ");
                     break;
                 case WHITE_QUEEN:
-                    // Si la case contient une dame blanche
                     printf("WD ");
                     break;
                 case BLACK_QUEEN:
-                    // Si la case contient une dame noire
                     printf("BD ");
                     break;
             }
@@ -222,35 +149,70 @@ void InitialiserDamier() {
     }
 }
 
-int verif(int i, int j, int x, int y) {
-    if (i < 1 || i > 10 || j < 1 || j > 10 || x < 1 || x > 10 || y < 1 || y > 10) {
-        printf("Erreur : i et j doivent etre entre 1 et 10.\n");
-        return 0;
-    }
+int mustcapture() {
+    int currentPlayer = player == WHITE ? WHITE_PAWN : BLACK_PAWN;
+    int opponentPiece = player == WHITE ? BLACK_PAWN : WHITE_PAWN;
+    capturepossible = 0;
 
-    IndirectMove moves[MAX_MOVES];
-    int moveCount = IsThereIndirectMove(moves);
+    for (int k = 0; k < 50; k++) {
+        if (board[k] == currentPlayer) {
+            int i = getRow(k + 1);
+            int j = getColumn(k + 1);
 
-    if (moveCount > 0) {
-        int found = 0;
-        for (int k = 0; k < moveCount; k++) {
-            if (moves[k].startRow == i && moves[k].startCol == j &&
-                moves[k].endRow == x && moves[k].endCol == y) {
-                found = 1;
-                break;
+            if (currentPlayer == WHITE_PAWN) {
+                if (i > 1 && j > 1 && board[getSquareNumber(i - 1, j - 1) - 1] == opponentPiece && board[getSquareNumber(i - 2, j - 2) - 1] == EMPTY) {
+                    coor[0] = getSquareNumber(i - 2, j - 2);
+                    capturepossible++;
+                }
+                if (i > 1 && j < 10 && board[getSquareNumber(i - 1, j + 1) - 1] == opponentPiece && board[getSquareNumber(i - 2, j + 2) - 1] == EMPTY) {
+                    coor[1] = getSquareNumber(i - 2, j + 2);
+                    capturepossible++;
+                }
+            } else {
+                if (i < 10 && j > 1 && board[getSquareNumber(i + 1, j - 1) - 1] == opponentPiece && board[getSquareNumber(i + 2, j - 2) - 1] == EMPTY) {
+                    coor[0] = getSquareNumber(i + 2, j - 2);
+                    capturepossible++;
+                }
+                if (i < 10 && j < 10 && board[getSquareNumber(i + 1, j + 1) - 1] == opponentPiece && board[getSquareNumber(i + 2, j + 2) - 1] == EMPTY) {
+                    coor[1] = getSquareNumber(i + 2, j + 2);
+                    capturepossible++;
+                }
             }
         }
-        if (!found) {
-            printf("Vous devez effectuer un mouvement indirect valide.\n");
+    }
+
+    if (capturepossible > 0) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+int verif(int i, int j, int x, int y) {
+
+    if (mustcapture() == 1) {
+        if ((x != getRow(coor[0]) && y != getColumn(coor[0])) || (x != getRow(coor[1]) && y != getColumn(coor[1]))) {
+            printf("Vous devez capturer le pion adverse vers la case (%d, %d) ou (%d, %d).\n", getRow(coor[0]), getColumn(coor[0]), getRow(coor[1]), getColumn(coor[1]));
             return 0;
         }
     }
+
 
     int currentPlayer = player == WHITE ? WHITE_PAWN : BLACK_PAWN;
     int opponentPiece = player == WHITE ? BLACK_PAWN : WHITE_PAWN;
 
     int startSquareNumber = getSquareNumber(i, j);
     int endSquareNumber = getSquareNumber(x, y);
+
+    if (startSquareNumber == 0 || endSquareNumber == 0) {
+        printf("Erreur : i et j doivent etre entre 1 et 10.\n");
+        return 0;
+    }
+
+    if (board[endSquareNumber - 1] != EMPTY) {
+        printf("La case (%d, %d) est deja occupee.\n", x, y);
+        return 0;
+    }
 
     if (board[startSquareNumber - 1] != currentPlayer) {
         printf("La case (%d, %d) ne contient pas votre pion.\n", i, j);
@@ -269,55 +231,46 @@ int verif(int i, int j, int x, int y) {
 
     int isWhitePawn = (board[startSquareNumber - 1] == WHITE_PAWN);
     int moveDirection = endSquareNumber - startSquareNumber;
-
     if ((isWhitePawn && moveDirection >= 0) || (!isWhitePawn && moveDirection <= 0)) {
-        printf("Le déplacement du pion sur la case (%d, %d) vers la case (%d, %d) n'est pas dans la bonne direction.\n", i, j, x, y);
+        printf("Le deplacement du pion sur la case (%d, %d) vers la case (%d, %d) n'est pas dans la bonne direction.\n", i, j, x, y);
         return 0;
     }
 
-    int isDirectMove = (abs(moveDirection) == 5 || abs(moveDirection) == 4 || abs(moveDirection) == 6);
 
-    if (isDirectMove && board[endSquareNumber - 1] != EMPTY) {
-        printf("Le deplacement direct du pion sur la case (%d, %d) vers la case (%d, %d) n'est pas possible car la case d'arrivee est occupee.\n", i, j, x, y);
-        return 0;
+
+    if (mustcapture() == 0) {
+        if (currentPlayer == WHITE_PAWN) {
+            if (moveDirection != -6 && moveDirection != -5 && moveDirection != -4) {
+                printf("Le deplacement du pion sur la case (%d, %d) vers la case (%d, %d) n'est pas valide car il est trop long.\n", i, j, x, y);
+                return 0;
+            }
+        }else{
+            if (moveDirection != 6 && moveDirection != 5 && moveDirection != 4) {
+                printf("Le deplacement du pion sur la case (%d, %d) vers la case (%d, %d) n'est pas valide car il est trop long.\n", i, j, x, y);
+                return 0;
+            }
+        }
     }
 
     printf("Le deplacement du pion sur la case (%d, %d) vers la case (%d, %d) est valide.\n", i, j, x, y);
     return 1;
 }
+
 int deplacer(int i, int j, int x, int y) {
-    if (verif(i, j, x, y) == 1) {
+    if (verif(i, j, x, y) == 1){
         int startSquareNumber = getSquareNumber(i, j);
         int endSquareNumber = getSquareNumber(x, y);
-
-        IndirectMove moves[MAX_MOVES];
-        int moveCount = IsThereIndirectMove(moves);
-
-        if (moveCount > 0) {
-            int chosenMove = -1;
-            for (int k = 0; k < moveCount; k++) {
-                if (moves[k].startRow == i && moves[k].startCol == j &&
-                    moves[k].endRow == x && moves[k].endCol == y) {
-                    chosenMove = k;
-                    break;
-                }
-            }
-
-            if (chosenMove >= 0) {
-                int jumpedSquareNumber = getSquareNumber(moves[chosenMove].jumpRow, moves[chosenMove].jumpCol);
-                board[jumpedSquareNumber - 1] = EMPTY;
-            }
+        if (mustcapture() == 1){
+            int jumpedSquareNumber = getSquareNumber((i + x) / 2, (j + y) / 2);
+            board[jumpedSquareNumber - 1] = EMPTY;
+            coor[0] = 0;
+            coor[1] = 0;
         }
-
         board[endSquareNumber - 1] = board[startSquareNumber - 1];
         board[startSquareNumber - 1] = EMPTY;
-
         player = player == WHITE ? BLACK : WHITE;
-
         return 1;
     }
-
-    return 0;
 }
 
 int main() {
@@ -331,24 +284,24 @@ int main() {
         printf("Menu :\n");
         printf("1. Deplacer un pion\n");
         printf("2. Afficher \n");
-        printf("3. Quitter\n");
+        printf("0. Quitter\n");
         printf("Votre choix : ");
         scanf("%d", &choix);
 
         switch (choix) {
             case 1:
-                printf("Entrez les coordonnees du pion a deplacer (i, j) et de la case d'arrivee (x, y) : ");
-                scanf("%d %d %d %d", &i, &j, &x, &y);
+                printf("Entrez les coordonnees du pion a deplacer (i, j) : ");
+                scanf("%d %d", &i, &j);
+                printf("Entrez les coordonnees de la case d'arrivee (x, y) : ");
+                scanf("%d %d", &x, &y);
                 if (deplacer(i, j, x, y) == 1) {
-                    system("cls");
                     AfficherDamier();
                 }
                 break;
             case 2:
-                system("cls");
                 AfficherDamier();
                 break;
-            case 3:
+            case 0:
                 return 0;
             default:
                 printf("Choix invalide.\n");
