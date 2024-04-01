@@ -36,6 +36,7 @@
     BLACK_QUEEN     equ     4
 
     v db ' $'
+    vd db '  $'
     WHITE equ 'W'
     BLACK equ 'B'
 
@@ -368,6 +369,10 @@ printSquareState proc
     mov ax, i
     mov bx, j
     call getSquareState
+    call getSquareColor
+    mov ax, get_SquareColor
+    cmp ax, WHITE
+    je print_white
     mov ax, get_SquareState
 
 
@@ -408,6 +413,13 @@ printSquareState proc
     BLACK_QUEEN:
 
         lea dx, damenoire
+        call puts
+        jmp done_printstate
+
+    print_white:
+
+            lea dx, vd
+            call puts
 
     done_printstate:
 
