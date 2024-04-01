@@ -192,7 +192,7 @@ int mustcapture() {
                 }
             }
             //white queen
-            //black queen 
+            //black queen
         }
     }
 
@@ -276,6 +276,16 @@ int deplacer(int i, int j, int x, int y) {
             board[jumpedSquareNumber - 1] = EMPTY;
             board[endSquareNumber - 1] = board[startSquareNumber - 1];
             board[startSquareNumber - 1] = EMPTY;
+
+            //le cas d un deplacement indirect vers la premiere ligne (W)-->(DW)
+            if (player == WHITE && board[endSquareNumber - 1] == WHITE_PAWN && getRow(endSquareNumber) == 1) {
+                board[endSquareNumber - 1] = WHITE_QUEEN;
+        }
+            //le cas d un deplacement indirect vers la derniere ligne (B)-->(DB)
+            if (player == BLACK && board[endSquareNumber - 1] == BLACK_PAWN && getRow(endSquareNumber) == 10) {
+                board[endSquareNumber - 1] = BLACK_QUEEN;
+        }
+
                 //update Score
              if(player == WHITE){
                 scoreWhite++;
@@ -293,7 +303,17 @@ int deplacer(int i, int j, int x, int y) {
         }else{
             board[endSquareNumber - 1] = board[startSquareNumber - 1];
             board[startSquareNumber - 1] = EMPTY;
+
+              //le cas d un deplacement direct vers la premiere ligne (W)-->(DW)
+            if (player == WHITE && board[endSquareNumber - 1] == WHITE_PAWN && getRow(endSquareNumber) == 1) {
+                board[endSquareNumber - 1] = WHITE_QUEEN;
+        }
+            //le cas d un deplacement direct vers la derniere ligne (B)-->(DB)
+            if (player == BLACK && board[endSquareNumber - 1] == BLACK_PAWN && getRow(endSquareNumber) == 10) {
+                board[endSquareNumber - 1] = BLACK_QUEEN;
+        }
             player = (player == WHITE) ? BLACK : WHITE;
+
         }
         return 1;
     }
