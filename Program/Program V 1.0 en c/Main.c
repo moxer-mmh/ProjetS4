@@ -13,6 +13,8 @@ int board[50];
 int player = WHITE;
 int capturepossible = 0;
 int coor[4];
+int scoreWhite=0;
+int scoreBlack=0;
 
 int getRow(int N);
 int getColumn(int N);
@@ -173,7 +175,7 @@ int mustcapture() {
                         capturepossible++;
                     }
                 }
-            } else {
+            } else if(currentPlayer == BLACK_PAWN){
                 if ((i+2)<11 && (j - 2)>0  ){
                     if (i < 10 && j > 1 && board[getSquareNumber(i + 1, j - 1) - 1] == opponentPiece && board[getSquareNumber(i + 2, j - 2) - 1] == EMPTY) {
                         coor[0] = getSquareNumber(i, j);
@@ -189,6 +191,8 @@ int mustcapture() {
                     }
                 }
             }
+            //white queen
+            //black queen 
         }
     }
 
@@ -266,17 +270,26 @@ int deplacer(int i, int j, int x, int y) {
     if (verif(i, j, x, y) == 1){
         int startSquareNumber = getSquareNumber(i, j);
         int endSquareNumber = getSquareNumber(x, y);
+           //deplacement indircet
         if (mustcapture() == 1){
             int jumpedSquareNumber = getSquareNumber((i + x) / 2, (j + y) / 2);
             board[jumpedSquareNumber - 1] = EMPTY;
             board[endSquareNumber - 1] = board[startSquareNumber - 1];
             board[startSquareNumber - 1] = EMPTY;
+                //update Score
+             if(player == WHITE){
+                scoreWhite++;
+            }else{
+                scoreBlack++;
+            }
+
             if (mustcapture() == 1){
                 printf("Vous devez continuer a capturer le pion adverse.\n");
                 return 1;
             }else{
                 player = (player == WHITE) ? BLACK : WHITE;
             }
+           //deplacement direct
         }else{
             board[endSquareNumber - 1] = board[startSquareNumber - 1];
             board[startSquareNumber - 1] = EMPTY;
@@ -300,6 +313,7 @@ int main() {
         printf("Menu :\n");
         printf("1. Deplacer un pion\n");
         printf("2. Afficher \n");
+        printf("3. Afficher score\n");
         printf("0. Quitter\n");
         printf("Votre choix : ");
         scanf("%d", &choix);
@@ -313,11 +327,16 @@ int main() {
                 scanf("%d %d", &x, &y);
                 if (deplacer(i, j, x, y) == 1) {
                     printf("------------------------------------------\n");
+                    system("cls");
                     AfficherDamier();
                 }
                 break;
             case 2:
+                system("cls");
                 AfficherDamier();
+                break;
+            case 3:
+                printf("Black Score : %d \t \t White Score : %d\n",scoreBlack,scoreWhite);
                 break;
             case 0:
                 return 0;
