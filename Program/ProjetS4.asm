@@ -9,11 +9,23 @@
     x dw ?
     y dw ?
     board db 50 dup(?)
-    get_Row dw ?
-    get_Column dw ?
-    get_SquareNumber dw ?
-    get_SquareColor dw ?
-    get_SquareState dw ?
+
+    sort_getRow dw ?
+    sort_getColumn dw ?
+    sort_getSquareNumber dw ?
+    sort_getSquareColor dw ?
+    sort_getSquareState dw ?
+
+    ent_squarenumberi dw ?
+    ent_squarenumberj dw ?
+    ent_squarecolori dw ?
+    ent_squarecolorj dw ?
+    ent_squarestatei dw ?
+    ent_squarestatej dw ?
+    ent_printi dw ?
+    ent_printj dw ?
+
+
     newline        dw     0Dh,0Ah, '$'
     error1 dw 'Erreur : N doit etre entre 1 et 50.', 0Dh, 0Ah, '$'
     error2 dw 'Erreur : i et j doivent etre entre 1 et 10.', 0Dh, 0Ah, '$'
@@ -93,7 +105,7 @@ getRow proc
 
     donegetRow:
         mov ah, 0
-        mov get_Row, ax
+        mov sort_getRow, ax
         pop bp
         ret
 
@@ -166,7 +178,7 @@ errorgetcolumn:
 
 done_column:
     mov ah, 0
-    mov get_Column, ax
+    mov sort_getColumn, ax
     pop bp
     ret
 
@@ -175,6 +187,9 @@ getColumn endp
 getSquareNumber proc
         push bp
         mov bp, sp
+
+        mov ax, ent_squarenumberi
+        mov bx, ent_squarenumberj
 
         cmp al, 1
         jl errorgetSquareNumber
@@ -194,13 +209,13 @@ getSquareNumber proc
         cmp ah, 0
         je msgcaseblanche
 
-        mov dx, i
+        mov dx, ent_squarenumberi
         sub dl, 1
         mov al, dl
         mov bl, 5
         mul bl
 
-        mov dx, j
+        mov dx, ent_squarenumberj
         add dl, 1
         mov cx, ax
         mov ax, dx
@@ -228,7 +243,7 @@ getSquareNumber proc
 
     donegetSquareNumber:
         mov ah, 0
-        mov get_SquareNumber, ax
+        mov sort_getSquareNumber, ax
         pop bp
         ret
 
@@ -238,10 +253,13 @@ getSquareColor proc
     push bp
     mov bp, sp
 
-    mov ax, i
-    mov bx, j
+    mov ax, ent_squarecolori
+    mov bx, ent_squarecolorj
+
+    mov ent_squarenumberi, ax
+    mov ent_squarenumberj, bx
     call getSquareNumber
-    mov ax, get_SquareNumber
+    mov ax, sort_getSquareNumber
     cmp ax, 0
     je white_square
 
@@ -249,8 +267,8 @@ getSquareColor proc
     jmp done_color
 
     white_square:
-        mov ax, i
-        mov bx, j
+        mov ax, ent_squarecolori
+        mov bx, ent_squarecolorj
 
         cmp al, 1
         jl done_color
@@ -265,7 +283,7 @@ getSquareColor proc
         mov ax, WHITE
 
     done_color:
-        mov get_SquareColor, ax
+        mov sort_getSquareColor, ax
         pop bp
         ret
 
@@ -275,8 +293,14 @@ getSquareState proc
     push bp
     mov bp, sp
 
+    mov ax, ent_squarestatei
+    mov bx, ent_squarestatej
+
+    mov ent_squarenumberi, ax
+    mov ent_squarenumberj, bx
+
     call getSquareNumber
-    mov ax, get_SquareNumber
+    mov ax, sort_getSquareNumber
     mov si, ax
 
 
@@ -318,7 +342,7 @@ getSquareState proc
         mov ax, 4
 
     done_state:
-        mov get_SquareState, ax
+        mov sort_getSquareState, ax
         pop bp
         ret
 
@@ -366,14 +390,20 @@ printSquare proc
     push bp
     mov bp, sp
 
-    mov ax, i
-    mov bx, j
+    mov ax, ent_printi
+    mov bx, ent_printj
+
+    mov ent_squarecolori, ax
+    mov ent_squarecolorj, bx
+    mov ent_squarestatei, ax
+    mov ent_squarestatej, bx
+
     call getSquareState
     call getSquareColor
-    mov ax, get_SquareColor
+    mov ax, sort_getSquareColor
     cmp ax, WHITE
     je print_white
-    mov ax, get_SquareState
+    mov ax, sort_getSquareState
 
 
     cmp ax, EMPTY
@@ -439,13 +469,13 @@ outer_loop:
 
 inner_loop:
 
-    mov i, cx
-    mov j, dx
+    mov ent_printi, cx
+    mov ent_printj, dx
 
     call printSquare
 
-    mov cx, i
-    mov dx, j
+    mov cx, ent_printi
+    mov dx, ent_printj
 
     inc dx
     cmp dx, 11
@@ -462,7 +492,7 @@ inner_loop:
     lea dx, newline
     call puts
 
-    mov cx, i
+    mov cx, ent_printi
     inc cx
     cmp cx, 10
     jle outer_loop
@@ -482,7 +512,7 @@ inner_loop:
 
 
     print_row:
-        mov ax, i
+        mov ax, ent_printi
         call print_decimal
     jmp ret_print_row
 
