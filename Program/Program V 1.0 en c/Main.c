@@ -195,6 +195,11 @@ int verif(int i, int j, int x, int y) {
             printf("Vous devez capturer le pion adverse vers la case (%d, %d) ou (%d, %d).\n", getRow(coor[0]), getColumn(coor[0]), getRow(coor[1]), getColumn(coor[1]));
             return 0;
         }
+    }else{
+        if (abs(i - x) > 1 || abs(j - y) > 1) {
+            printf("Le deplacement du pion sur la case (%d, %d) vers la case (%d, %d) n'est pas valide car il est trop long.\n", i, j, x, y);
+            return 0;
+        }
     }
 
 
@@ -236,22 +241,6 @@ int verif(int i, int j, int x, int y) {
         return 0;
     }
 
-
-
-    if (mustcapture() == 0) {
-        if (currentPlayer == WHITE_PAWN) {
-            if (moveDirection != -6 && moveDirection != -5 && moveDirection != -4) {
-                printf("Le deplacement du pion sur la case (%d, %d) vers la case (%d, %d) n'est pas valide car il est trop long.\n", i, j, x, y);
-                return 0;
-            }
-        }else{
-            if (moveDirection != 6 && moveDirection != 5 && moveDirection != 4) {
-                printf("Le deplacement du pion sur la case (%d, %d) vers la case (%d, %d) n'est pas valide car il est trop long.\n", i, j, x, y);
-                return 0;
-            }
-        }
-    }
-
     printf("Le deplacement du pion sur la case (%d, %d) vers la case (%d, %d) est valide.\n", i, j, x, y);
     return 1;
 }
@@ -275,6 +264,12 @@ int deplacer(int i, int j, int x, int y) {
 }
 
 int main() {
+
+
+
+
+
+
     InitialiserDamier();
     AfficherDamier();
 
