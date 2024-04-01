@@ -362,7 +362,7 @@ next_index:
 
 InitialiserDamier endp
 
-printSquareState proc
+printSquare proc
     push bp
     mov bp, sp
 
@@ -427,7 +427,7 @@ printSquareState proc
         ret
 
 
-printSquareState endp
+printSquare endp
 
 AfficherDamier proc
     push bp
@@ -442,7 +442,7 @@ inner_loop:
     mov i, cx
     mov j, dx
 
-    call printSquareState
+    call printSquare
 
     mov cx, i
     mov dx, j
