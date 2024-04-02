@@ -15,6 +15,7 @@ int capturepossible = 0;
 int coor[50];
 int scoreWhite=0;
 int scoreBlack=0;
+int jumpedSquareforqueen;
 
 int getRow(int N);
 int getColumn(int N);
@@ -152,14 +153,9 @@ int mustcapture() {
     int opponentPiece = player == WHITE ? BLACK_PAWN : WHITE_PAWN;
     int opponentQueen = player == WHITE ? BLACK_QUEEN : WHITE_QUEEN;
     capturepossible = 0;
-    coor[0] = 0;
-    coor[1] = 0;
-    coor[2] = 0;
-    coor[3] = 0;
-    coor[4] = 0;
-    coor[5] = 0;
-    coor[6] = 0;
-    coor[7] = 0;
+    for(int q = 0; q < 50; q++){
+        coor[q] = 0;
+    }
     int q = 0;
 
     for (int k = 0; k < 50; k++) {
@@ -207,10 +203,7 @@ int mustcapture() {
                 }
             }
         }
-    }
-
-    // Check for queens
-    for (int k = 0; k < 50; k++) {
+        // Check for queens
         if (board[k] == currentQueen) {
             int i = getRow(k + 1);
             int j = getColumn(k + 1);
@@ -224,7 +217,7 @@ int mustcapture() {
                 }
 
                 int squareNumber = getSquareNumber(i - m, j - m);
-                if (board[squareNumber - 1] == currentPlayer) {
+                if (board[squareNumber - 1] == currentQueen) {
                     break;
                 }
 
@@ -232,7 +225,7 @@ int mustcapture() {
                     continue;
                 }
 
-                if (board[squareNumber - 1] == opponentPiece) {
+                if (board[squareNumber - 1] == opponentQueen) {
                     if ((i - m - 1) < 1 || (j - m - 1) < 1) {
                         break;
                     }
@@ -243,6 +236,7 @@ int mustcapture() {
                         coor[q] = getSquareNumber(i - m - 1, j - m - 1);
                         q++;
                         capturepossible++;
+                        jumpedSquareforqueen = getSquareNumber(i - m, j - m);
                         break;
                     } else {
                         break;
@@ -257,7 +251,7 @@ int mustcapture() {
                 }
 
                 int squareNumber = getSquareNumber(i - m, j + m);
-                if (board[squareNumber - 1] == currentPlayer) {
+                if (board[squareNumber - 1] == currentQueen) {
                     break;
                 }
 
@@ -265,7 +259,7 @@ int mustcapture() {
                     continue;
                 }
 
-                if (board[squareNumber - 1] == opponentPiece) {
+                if (board[squareNumber - 1] == opponentQueen) {
                     if ((i - m - 1) < 1 || (j + m + 1) > 10) {
                         break;
                     }
@@ -276,6 +270,7 @@ int mustcapture() {
                         coor[q] = getSquareNumber(i - m - 1, j + m + 1);
                         q++;
                         capturepossible++;
+                        jumpedSquareforqueen = getSquareNumber(i - m, j + m);
                         break;
                     } else {
                         break;
@@ -290,7 +285,7 @@ int mustcapture() {
                 }
 
                 int squareNumber = getSquareNumber(i + m, j - m);
-                if (board[squareNumber - 1] == currentPlayer) {
+                if (board[squareNumber - 1] == currentQueen) {
                     break;
                 }
 
@@ -298,7 +293,7 @@ int mustcapture() {
                     continue;
                 }
 
-                if (board[squareNumber - 1] == opponentPiece) {
+                if (board[squareNumber - 1] == opponentQueen) {
                     if ((i + m + 1) > 10 || (j - m - 1) < 1) {
                         break;
                     }
@@ -309,6 +304,7 @@ int mustcapture() {
                         coor[q] = getSquareNumber(i + m + 1, j - m - 1);
                         q++;
                         capturepossible++;
+                        jumpedSquareforqueen = getSquareNumber(i + m, j - m);
                         break;
                     } else {
                         break;
@@ -323,7 +319,7 @@ int mustcapture() {
                 }
 
                 int squareNumber = getSquareNumber(i + m, j + m);
-                if (board[squareNumber - 1] == currentPlayer) {
+                if (board[squareNumber - 1] == currentQueen) {
                     break;
                 }
 
@@ -331,7 +327,7 @@ int mustcapture() {
                     continue;
                 }
 
-                if (board[squareNumber - 1] == opponentPiece) {
+                if (board[squareNumber - 1] == opponentQueen) {
                     if ((i + m + 1) > 10 || (j + m + 1) > 10) {
                         break;
                     }
@@ -342,6 +338,7 @@ int mustcapture() {
                         coor[q] = getSquareNumber(i + m + 1, j + m + 1);
                         q++;
                         capturepossible++;
+                        jumpedSquareforqueen = getSquareNumber(i + m, j + m);
                         break;
                     } else {
                         break;
@@ -354,6 +351,7 @@ int mustcapture() {
     }
 
 
+    printf("capturepossible = %d\n", capturepossible);
     if (capturepossible > 0) {
         return 1;
     } else {
@@ -371,7 +369,7 @@ int verif(int i, int j, int x, int y) {
     int endSquareNumber = getSquareNumber(x, y);
 
     if (mustcapture() == 1) {
-            if ((i!= getRow(coor[0]) || j != getColumn(coor[0]) || x != getRow(coor[1]) || y != getColumn(coor[1])) && (i!= getRow(coor[2]) || j != getColumn(coor[2]) || x != getRow(coor[3]) || y != getColumn(coor[3])) && (i!= getRow(coor[4]) || j != getColumn(coor[4]) || x != getRow(coor[5]) || y != getColumn(coor[5])) && (i!= getRow(coor[6]) || j != getColumn(coor[6]) || x != getRow(coor[7]) || y != getColumn(coor[7]))) {
+        if ((i!= getRow(coor[0]) || j != getColumn(coor[0]) || x != getRow(coor[1]) || y != getColumn(coor[1])) && (i!= getRow(coor[2]) || j != getColumn(coor[2]) || x != getRow(coor[3]) || y != getColumn(coor[3])) && (i!= getRow(coor[4]) || j != getColumn(coor[4]) || x != getRow(coor[5]) || y != getColumn(coor[5])) && (i!= getRow(coor[6]) || j != getColumn(coor[6]) || x != getRow(coor[7]) || y != getColumn(coor[7])) && (i!= getRow(coor[8]) || j != getColumn(coor[8]) || x != getRow(coor[9]) || y != getColumn(coor[9])) && (i!= getRow(coor[10]) || j != getColumn(coor[10]) || x != getRow(coor[11]) || y != getColumn(coor[11])) && (i!= getRow(coor[12]) || j != getColumn(coor[12]) || x != getRow(coor[13]) || y != getColumn(coor[13])) && (i!= getRow(coor[14]) || j != getColumn(coor[14]) || x != getRow(coor[15]) || y != getColumn(coor[15])) && (i!= getRow(coor[16]) || j != getColumn(coor[16]) || x != getRow(coor[17]) || y != getColumn(coor[17])) && (i!= getRow(coor[18]) || j != getColumn(coor[18]) || x != getRow(coor[19]) || y != getColumn(coor[19]))){
                 int k = 0;
                 while (coor[k] != 0){
                     printf("Vous devez capturer le pion adverse de la case (%d, %d) vers la case (%d, %d).\n", getRow(coor[k]), getColumn(coor[k]), getRow(coor[k+1]), getColumn(coor[k+1]));
@@ -379,14 +377,15 @@ int verif(int i, int j, int x, int y) {
                 }
                 return 0;
             }
-    }else{
-        if (abs(i - x) > 1 || abs(j - y) > 1) {
-            printf("Le deplacement du pion sur la case (%d, %d) vers la case (%d, %d) n'est pas valide car il est trop long.\n", i, j, x, y);
-            return 0;
-        }
     }
 
     if (displaySquareState(i, j) == currentPlayer){
+        if (mustcapture == 0){
+            if (abs(i - x) > 1 || abs(j - y) > 1) {
+                printf("Le deplacement du pion sur la case (%d, %d) vers la case (%d, %d) n'est pas valide car il est trop long.\n", i, j, x, y);
+                return 0;
+            }
+        }
 
         if (startSquareNumber == 0 || endSquareNumber == 0) {
             printf("Erreur : i et j doivent etre entre 1 et 10.\n");
@@ -523,7 +522,7 @@ int deplacer(int i, int j, int x, int y) {
             int endSquareNumber = getSquareNumber(x, y);
                //deplacement indircet
             if (mustcapture() == 1){
-                int jumpedSquareNumber = ;
+                int jumpedSquareNumber = jumpedSquareforqueen ;
                 board[jumpedSquareNumber - 1] = EMPTY;
                 board[endSquareNumber - 1] = board[startSquareNumber - 1];
                 board[startSquareNumber - 1] = EMPTY;
@@ -555,9 +554,7 @@ int deplacer(int i, int j, int x, int y) {
 }
 
 int main() {
-    board[18] = WHITE_PAWN;
-    board[36] = BLACK_QUEEN;
-    board[40] = WHITE_PAWN;
+    InitialiserDamier();
     AfficherDamier();
 
     int choix, i, j, x, y;
