@@ -15,7 +15,12 @@ int capturepossible = 0;
 int coor[50];
 int scoreWhite=0;
 int scoreBlack=0;
-int jumpedSquareforqueen;
+
+int jumpsqutole[2];
+int jumpsqutori[2];
+int jumpsqubole[2];
+int jumpsqubori[2];
+
 
 int getRow(int N);
 int getColumn(int N);
@@ -153,10 +158,21 @@ int mustcapture() {
     int opponentPiece = player == WHITE ? BLACK_PAWN : WHITE_PAWN;
     int opponentQueen = player == WHITE ? BLACK_QUEEN : WHITE_QUEEN;
     capturepossible = 0;
-    for(int q = 0; q < 50; q++){
-        coor[q] = 0;
+    coor[0]=0;
+    coor[1]=0;
+    coor[2]=0;
+    coor[3]=0;
+    coor[4]=0;
+    coor[5]=0;
+    coor[6]=0;
+    coor[7]=0;
+    int q=0;
+    for (int s; s<2; s++){
+        jumpsqutole[s]=0;
+        jumpsqutori[s]=0;
+        jumpsqubole[s]=0;
+        jumpsqubori[s]=0;
     }
-    int q = 0;
 
     for (int k = 0; k < 50; k++) {
         if (board[k] == currentPlayer) {
@@ -165,7 +181,7 @@ int mustcapture() {
 
             if (currentPlayer == WHITE_PAWN) {
                 if ((i-2)>0 && (j - 2)>0  ){
-                    if (i > 1 && j > 1 && board[getSquareNumber(i - 1, j - 1) - 1] == opponentPiece && board[getSquareNumber(i - 2, j - 2) - 1] == EMPTY) {
+                    if (i > 1 && j > 1 && (board[getSquareNumber(i - 1, j - 1) - 1] == opponentPiece || board[getSquareNumber(i - 1, j - 1) - 1] == opponentQueen) && board[getSquareNumber(i - 2, j - 2) - 1] == EMPTY) {
                         coor[q] = getSquareNumber(i, j);
                         q++;
                         coor[q] = getSquareNumber(i - 2, j - 2);
@@ -174,7 +190,7 @@ int mustcapture() {
                     }
                 }
                 if ((i-2)>0 && (j + 2)<11){
-                    if (i > 1 && j < 10 && board[getSquareNumber(i - 1, j + 1) - 1] == opponentPiece && board[getSquareNumber(i - 2, j + 2) - 1] == EMPTY) {
+                    if (i > 1 && j < 10 && (board[getSquareNumber(i - 1, j + 1) - 1] == opponentPiece || board[getSquareNumber(i - 1, j + 1) - 1] == opponentQueen) && board[getSquareNumber(i - 2, j + 2) - 1] == EMPTY) {
                         coor[q] = getSquareNumber(i, j);
                         q++;
                         coor[q] = getSquareNumber(i - 2, j + 2);
@@ -184,7 +200,7 @@ int mustcapture() {
                 }
             } else if(currentPlayer == BLACK_PAWN){
                 if ((i+2)<11 && (j - 2)>0  ){
-                    if (i < 10 && j > 1 && board[getSquareNumber(i + 1, j - 1) - 1] == opponentPiece && board[getSquareNumber(i + 2, j - 2) - 1] == EMPTY) {
+                     if (i < 10 && j > 1 && (board[getSquareNumber(i + 1, j - 1) - 1] == opponentPiece || board[getSquareNumber(i + 1, j - 1) - 1] == opponentQueen) && board[getSquareNumber(i + 2, j - 2) - 1] == EMPTY) {
                         coor[q] = getSquareNumber(i, j);
                         q++;
                         coor[q] = getSquareNumber(i + 2, j - 2);
@@ -193,7 +209,7 @@ int mustcapture() {
                     }
                 }
                 if ((i+2)<11 && (j + 2)<11){
-                    if (i < 10 && j < 10 && board[getSquareNumber(i + 1, j + 1) - 1] == opponentPiece && board[getSquareNumber(i + 2, j + 2) - 1] == EMPTY) {
+                    if (i < 10 && j < 10 && (board[getSquareNumber(i + 1, j + 1) - 1] == opponentPiece || board[getSquareNumber(i + 1, j + 1) - 1] == opponentQueen ) && board[getSquareNumber(i + 2, j + 2) - 1] == EMPTY) {
                         coor[q] = getSquareNumber(i, j);
                         q++;
                         coor[q] = getSquareNumber(i + 2, j + 2);
@@ -217,7 +233,7 @@ int mustcapture() {
                 }
 
                 int squareNumber = getSquareNumber(i - m, j - m);
-                if (board[squareNumber - 1] == currentQueen) {
+                if (board[squareNumber - 1] == currentQueen || board[squareNumber - 1] == currentPlayer) {
                     break;
                 }
 
@@ -225,7 +241,7 @@ int mustcapture() {
                     continue;
                 }
 
-                if (board[squareNumber - 1] == opponentQueen) {
+                if (board[squareNumber - 1] == opponentQueen || board[squareNumber - 1] == opponentPiece) {
                     if ((i - m - 1) < 1 || (j - m - 1) < 1) {
                         break;
                     }
@@ -236,7 +252,8 @@ int mustcapture() {
                         coor[q] = getSquareNumber(i - m - 1, j - m - 1);
                         q++;
                         capturepossible++;
-                        jumpedSquareforqueen = getSquareNumber(i - m, j - m);
+                        jumpsqutole[0] = i - m; // Assign a value to the first element of jumpsqutole
+                        jumpsqutole[1]=j-m;
                         break;
                     } else {
                         break;
@@ -251,7 +268,7 @@ int mustcapture() {
                 }
 
                 int squareNumber = getSquareNumber(i - m, j + m);
-                if (board[squareNumber - 1] == currentQueen) {
+                if (board[squareNumber - 1] == currentQueen || board[squareNumber - 1] == currentPlayer) {
                     break;
                 }
 
@@ -259,7 +276,7 @@ int mustcapture() {
                     continue;
                 }
 
-                if (board[squareNumber - 1] == opponentQueen) {
+                if (board[squareNumber - 1] == opponentQueen || board[squareNumber - 1] == opponentPiece) {
                     if ((i - m - 1) < 1 || (j + m + 1) > 10) {
                         break;
                     }
@@ -270,7 +287,8 @@ int mustcapture() {
                         coor[q] = getSquareNumber(i - m - 1, j + m + 1);
                         q++;
                         capturepossible++;
-                        jumpedSquareforqueen = getSquareNumber(i - m, j + m);
+                        jumpsqutori[0]=i-m;
+                        jumpsqutori[1]=j+m;
                         break;
                     } else {
                         break;
@@ -285,7 +303,7 @@ int mustcapture() {
                 }
 
                 int squareNumber = getSquareNumber(i + m, j - m);
-                if (board[squareNumber - 1] == currentQueen) {
+                if (board[squareNumber - 1] == currentQueen || board[squareNumber - 1] == currentPlayer) {
                     break;
                 }
 
@@ -293,7 +311,7 @@ int mustcapture() {
                     continue;
                 }
 
-                if (board[squareNumber - 1] == opponentQueen) {
+                if (board[squareNumber - 1] == opponentQueen || board[squareNumber - 1] == opponentPiece) {
                     if ((i + m + 1) > 10 || (j - m - 1) < 1) {
                         break;
                     }
@@ -304,7 +322,8 @@ int mustcapture() {
                         coor[q] = getSquareNumber(i + m + 1, j - m - 1);
                         q++;
                         capturepossible++;
-                        jumpedSquareforqueen = getSquareNumber(i + m, j - m);
+                        jumpsqubole[0]=i+m;
+                        jumpsqubole[1]=j-m;
                         break;
                     } else {
                         break;
@@ -319,7 +338,7 @@ int mustcapture() {
                 }
 
                 int squareNumber = getSquareNumber(i + m, j + m);
-                if (board[squareNumber - 1] == currentQueen) {
+                if (board[squareNumber - 1] == currentQueen || board[squareNumber - 1] == currentPlayer) {
                     break;
                 }
 
@@ -327,7 +346,7 @@ int mustcapture() {
                     continue;
                 }
 
-                if (board[squareNumber - 1] == opponentQueen) {
+                if (board[squareNumber - 1] == opponentQueen || board[squareNumber - 1] == opponentPiece) {
                     if ((i + m + 1) > 10 || (j + m + 1) > 10) {
                         break;
                     }
@@ -338,7 +357,8 @@ int mustcapture() {
                         coor[q] = getSquareNumber(i + m + 1, j + m + 1);
                         q++;
                         capturepossible++;
-                        jumpedSquareforqueen = getSquareNumber(i + m, j + m);
+                        jumpsqubori[0]=i+m;
+                        jumpsqubori[1]=j+m;
                         break;
                     } else {
                         break;
@@ -350,8 +370,6 @@ int mustcapture() {
         }
     }
 
-
-    printf("capturepossible = %d\n", capturepossible);
     if (capturepossible > 0) {
         return 1;
     } else {
@@ -369,7 +387,7 @@ int verif(int i, int j, int x, int y) {
     int endSquareNumber = getSquareNumber(x, y);
 
     if (mustcapture() == 1) {
-        if ((i!= getRow(coor[0]) || j != getColumn(coor[0]) || x != getRow(coor[1]) || y != getColumn(coor[1])) && (i!= getRow(coor[2]) || j != getColumn(coor[2]) || x != getRow(coor[3]) || y != getColumn(coor[3])) && (i!= getRow(coor[4]) || j != getColumn(coor[4]) || x != getRow(coor[5]) || y != getColumn(coor[5])) && (i!= getRow(coor[6]) || j != getColumn(coor[6]) || x != getRow(coor[7]) || y != getColumn(coor[7])) && (i!= getRow(coor[8]) || j != getColumn(coor[8]) || x != getRow(coor[9]) || y != getColumn(coor[9])) && (i!= getRow(coor[10]) || j != getColumn(coor[10]) || x != getRow(coor[11]) || y != getColumn(coor[11])) && (i!= getRow(coor[12]) || j != getColumn(coor[12]) || x != getRow(coor[13]) || y != getColumn(coor[13])) && (i!= getRow(coor[14]) || j != getColumn(coor[14]) || x != getRow(coor[15]) || y != getColumn(coor[15])) && (i!= getRow(coor[16]) || j != getColumn(coor[16]) || x != getRow(coor[17]) || y != getColumn(coor[17])) && (i!= getRow(coor[18]) || j != getColumn(coor[18]) || x != getRow(coor[19]) || y != getColumn(coor[19]))){
+        if ((i!= getRow(coor[0]) || j != getColumn(coor[0]) || x != getRow(coor[1]) || y != getColumn(coor[1])) && (i!= getRow(coor[2]) || j != getColumn(coor[2]) || x != getRow(coor[3]) || y != getColumn(coor[3])) && (i!= getRow(coor[4]) || j != getColumn(coor[4]) || x != getRow(coor[5]) || y != getColumn(coor[5])) && (i!= getRow(coor[6]) || j != getColumn(coor[6]) || x != getRow(coor[7]) || y != getColumn(coor[7]))){
                 int k = 0;
                 while (coor[k] != 0){
                     printf("Vous devez capturer le pion adverse de la case (%d, %d) vers la case (%d, %d).\n", getRow(coor[k]), getColumn(coor[k]), getRow(coor[k+1]), getColumn(coor[k+1]));
@@ -459,6 +477,9 @@ int verif(int i, int j, int x, int y) {
             column += columnDirection;
         }
     }
+    }else{
+        printf("La case (%d, %d) ne contient pas votre pion ou votre dame.\n", i, j);
+        return 0;
     }
 
     printf("Le deplacement du pion sur la case (%d, %d) vers la case (%d, %d) est valide.\n", i, j, x, y);
@@ -522,7 +543,17 @@ int deplacer(int i, int j, int x, int y) {
             int endSquareNumber = getSquareNumber(x, y);
                //deplacement indircet
             if (mustcapture() == 1){
-                int jumpedSquareNumber = jumpedSquareforqueen ;
+                int jumpedSquareNumber;
+                if (x+1 == jumpsqutole[0] && y+1 == jumpsqutole[1]){
+                    jumpedSquareNumber = getSquareNumber(jumpsqutole[0], jumpsqutole[1]);
+                } else if (x+1 == jumpsqutori[0] && y-1 == jumpsqutori[1]){
+                    jumpedSquareNumber = getSquareNumber(jumpsqutori[0], jumpsqutori[1]);
+                } else if (x-1 == jumpsqubole[0] && y+1 == jumpsqubole[1]){
+                    jumpedSquareNumber = getSquareNumber(jumpsqubole[0], jumpsqubole[1]);
+                } else if (x-1 == jumpsqubori[0] && y-1 == jumpsqubori[1]){
+                    jumpedSquareNumber = getSquareNumber(jumpsqubori[0], jumpsqubori[1]);
+                }
+                
                 board[jumpedSquareNumber - 1] = EMPTY;
                 board[endSquareNumber - 1] = board[startSquareNumber - 1];
                 board[startSquareNumber - 1] = EMPTY;
@@ -580,12 +611,10 @@ int main() {
                 scanf("%d %d", &x, &y);
                 if (deplacer(i, j, x, y) == 1) {
                     printf("------------------------------------------\n");
-                    system("cls");
                     AfficherDamier();
                 }
                 break;
             case 2:
-                system("cls");
                 AfficherDamier();
                 break;
             case 3:
