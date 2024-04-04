@@ -1021,5 +1021,19 @@ int main() {
     return 0;
 }
 
-//khass
+//c
 //dama deplacement makla hta leb3id
+
+
+
+
+//assembleur
+
+//main
+//mustcapture
+//mustcaptureaftercapture
+//verif
+//deplacer
+
+//***afficher***
+//***generateAImove***
