@@ -1,8 +1,7 @@
-.model small
-.stack 100h
-
-.data
-    
+STACK SEGMENT PARA STACK
+      DB 64 DUP(?)
+STACK ENDS
+DATA SEGMENT PARA 'DATA'
     N dw ?
     i dw ?
     j dw ?
@@ -51,11 +50,18 @@
     vd db '  $'
     WHITE equ 'W'
     BLACK equ 'B'
+DATA ENDS
 
-.code
+CODE SEGMENT PARA 'CODE'
 main proc
-        mov ax, @data
-        mov ds, ax
+		ASSUME CS:CODE,DS:DATA,SS:STACK      ;assume as code,data and stack segments the respective registers
+		PUSH DS                              ;push to the stack the DS segment
+		SUB AX,AX                            ;clean the AX register
+		PUSH AX                              ;push AX to the stack
+		MOV AX,DATA                          ;save on the AX register the contents of the DATA segment
+		MOV DS,AX                            ;save on the DS segment the contents of AX
+		POP AX                               ;release the top item from the stack to the AX register
+		POP AX                               ;release the top item from the stack to the AX register
 
         lea dx, newline
         call puts
@@ -633,4 +639,5 @@ print_digits:
     ret
 print_decimal endp
 
-end main
+CODE ENDS
+END
