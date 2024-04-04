@@ -23,6 +23,8 @@ int jumpsqutori[2];
 int jumpsqubole[2];
 int jumpsqubori[2];
 
+int movesSinceLastCapture = 0;
+
 
 int getRow(int N);
 int getColumn(int N);
@@ -746,6 +748,8 @@ int deplacer(int i, int j, int x, int y) {
                     scoreBlack++;
                 }
 
+                movesSinceLastCapture = 0;
+
                 captureaftercapture [0] = 0;
                 captureaftercapture [1] = 0;
                 if (mustcaptureaftercapture(x,y) == 1){
@@ -798,6 +802,8 @@ int deplacer(int i, int j, int x, int y) {
                 }else{
                     scoreBlack++;
                 }
+
+                movesSinceLastCapture = 0;
 
                 if (mustcaptureaftercapture(x,y) == 1){
                     printf("Vous devez continuer a capturer le pion adverse.\n");
@@ -855,9 +861,47 @@ int main() {
                 printf("Black Score : %d \t \t White Score : %d\n",scoreBlack,scoreWhite);
                 break;
             case 0:
-                return 0;
+                printf("Player %c has quit the game. Player %c wins!\n", (player == WHITE) ? 'B' : 'W', (player == WHITE) ? 'W' : 'B');
+                break;
             default:
                 printf("Choix invalide.\n");
+        }
+
+
+        // a verifier
+        if (choix == 0) {
+            break;
+        }
+        if (scoreWhite >= 20) {
+            printf("Player W has reached 20 wins! Player W wins the game!\n");
+            break;
+        }
+        if (scoreBlack >= 20) {
+            printf("Player B has reached 20 wins! Player B wins the game!\n");
+            break;
+        }
+
+        int whiteHasOnlyQueens = 1, blackHasOnlyQueens = 1;
+        int numWhitePawns = 0, numBlackPawns = 0;
+        for (int k = 0; k < 50; k++) {
+            if (board[k] == WHITE_PAWN) {
+                whiteHasOnlyQueens = 0;
+                numWhitePawns++;
+            }
+            if (board[k] == BLACK_PAWN) {
+                blackHasOnlyQueens = 0;
+                numBlackPawns++;
+            }
+        }
+
+        if (whiteHasOnlyQueens && blackHasOnlyQueens && capturepossible == 0) {
+            movesSinceLastCapture++;
+            if (movesSinceLastCapture >= 3) {
+                printf("Both players have only queens, and neither player can capture the other after three moves. The game ends in a draw!\n");
+                break;
+            }
+        } else {
+            movesSinceLastCapture = 0;
         }
     }
 
@@ -867,4 +911,3 @@ int main() {
 
 //khass
 //dama deplacement makla hta leb3id
-//game over
