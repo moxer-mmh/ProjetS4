@@ -861,7 +861,7 @@ int main() {
                 printf("Black Score : %d \t \t White Score : %d\n",scoreBlack,scoreWhite);
                 break;
             case 0:
-                printf("Player %c has quit the game. Player %c wins!\n", (player == WHITE) ? 'B' : 'W', (player == WHITE) ? 'W' : 'B');
+                printf("le joueur %c a quitter la game. Player %c wins!\n", (player == WHITE) ? 'B' : 'W', (player == WHITE) ? 'W' : 'B');
                 break;
             default:
                 printf("Choix invalide.\n");
@@ -873,7 +873,7 @@ int main() {
             break;
         }
         if (scoreWhite >= 20) {
-            printf("Player W has reached 20 wins! Player W wins the game!\n");
+            printf("le joueur W a atteint 20 victoires! Le joueur W gagne le jeu!\n");
             break;
         }
         if (scoreBlack >= 20) {
@@ -896,8 +896,8 @@ int main() {
 
         if (whiteHasOnlyQueens && blackHasOnlyQueens && capturepossible == 0) {
             movesSinceLastCapture++;
-            if (movesSinceLastCapture >= 3) {
-                printf("Both players have only queens, and neither player can capture the other after three moves. The game ends in a draw!\n");
+            if (movesSinceLastCapture >= 6) {
+                printf("le jeu est bloque, il n'y a pas de gagnant.\n");
                 break;
             }
         } else {
