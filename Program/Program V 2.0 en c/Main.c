@@ -270,7 +270,6 @@ int mustcapture() {
                             }
                         queencapturesqtole[qatole] = -1;
                         qatole++;
-                        break;
                     } else {
                         break;
                     }
@@ -310,7 +309,6 @@ int mustcapture() {
                         }
                         queencapturesqtori[qatori] = -1;
                         qatori++;
-                        break;
                     } else {
                         break;
                     }
@@ -339,6 +337,7 @@ int mustcapture() {
 
                     if (board[getSquareNumber(i + m + 1, j - m - 1) - 1] == EMPTY) {
                         queencapturesqubole[qabole] = getSquareNumber(i, j);
+                        qabole++;
                         capturepossible++;
                         jumpsqubole++;
                         int c = 1;
@@ -349,7 +348,6 @@ int mustcapture() {
                         }
                         queencapturesqubole[qabole] = -1;
                         qabole++;
-                        break;
                     } else {
                         break;
                     }
@@ -389,7 +387,6 @@ int mustcapture() {
                         }
                         queencapturesqubori[qabori] = -1;
                         qabori++;
-                        break;
                     } else {
                         break;
                     }
@@ -511,7 +508,8 @@ int mustcaptureaftercapture(int i , int j){
                             qatole++;
                             c++;
                             }
-                        break;
+                        queencapturesqtole[qatole] = -1;
+                        qatole++;
                     } else {
                         break;
                     }
@@ -549,7 +547,8 @@ int mustcaptureaftercapture(int i , int j){
                             qatori++;
                             c++;
                         }
-                        break;
+                        queencapturesqtori[qatori] = -1;
+                        qatori++;
                     } else {
                         break;
                     }
@@ -578,6 +577,7 @@ int mustcaptureaftercapture(int i , int j){
 
                     if (board[getSquareNumber(i + m + 1, j - m - 1) - 1] == EMPTY) {
                         queencapturesqubole[qabole] = getSquareNumber(i, j);
+                        qabole++;
                         capturepossible++;
                         jumpsqubole++;
                         int c = 1;
@@ -586,7 +586,8 @@ int mustcaptureaftercapture(int i , int j){
                             qabole++;
                             c++;
                         }
-                        break;
+                        queencapturesqubole[qabole] = -1;
+                        qabole++;
                     } else {
                         break;
                     }
@@ -624,14 +625,13 @@ int mustcaptureaftercapture(int i , int j){
                             qabori++;
                             c++;
                         }
-                        break;
+                        queencapturesqubori[qabori] = -1;
+                        qabori++;
                     } else {
                         break;
                     }
                 }
             }
-
-
         }
 
     if (capturepossible > 0) {
@@ -643,19 +643,21 @@ int mustcaptureaftercapture(int i , int j){
 
 int verifqueens(int i,int j, int x, int y, int testtable[50]){
     int found = 0;
-        int k = 0;
+        int k = 1;
         int p = 0;
-        while (p<50 && k<50){
+        while (k<50){
             while (testtable[k] != -1) {
-                if (testtable[p] == getSquareNumber(i, j) && testtable[k + 1] == getSquareNumber(x, y)) {
+                if (testtable[p] == getSquareNumber(i, j) && testtable[k] == getSquareNumber(x, y)) {
                     found = 1;
                     break;
                 }
-                k += 2;
+                k ++;
             }
             k++;
-            p+=k;
-            k++;
+            if (testtable[k]!=0){
+                p+=k;
+                k++;
+            }
         }
 
         if (!found) {
@@ -1084,6 +1086,7 @@ void generateAIMove(){
 }
 
 int main() {
+
     InitialiserDamier();
     AfficherDamier();
 
@@ -1142,6 +1145,26 @@ int main() {
         }
         if (scoreBlack >= 20) {
             printf("le joueur B a atteint 20! Le joueur B gagne le jeu!\n");
+            break;
+        }
+
+        int whitepieces = 0, blackpieces = 0;
+        for (int k = 0; k < 50; k++) {
+            if (board[k] == WHITE_PAWN || board[k] == WHITE_QUEEN) {
+                whitepieces++;
+            }
+            if (board[k] == BLACK_PAWN || board[k] == BLACK_QUEEN) {
+                blackpieces++;
+            }
+        }
+
+        if (whitepieces == 0) {
+            printf("le joueur W n'a plus de pions ou de dame! Le joueur B gagne le jeu!\n");
+            break;
+        }
+
+        if (blackpieces == 0) {
+            printf("le joueur B n'a plus de pions ou de dame! Le joueur W gagne le jeu!\n");
             break;
         }
 
