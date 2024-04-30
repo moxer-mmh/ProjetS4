@@ -1485,10 +1485,9 @@ int main()
 }
 // assembleur
 
-// mustcapture
 // verif
 // deplacer
-// mustcaptureaftercapture
+// verifqueens
 
 // main
 

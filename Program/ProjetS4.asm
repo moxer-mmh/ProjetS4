@@ -2111,11 +2111,9 @@ Mustcaptureaftercapture proc
     ; Calcul des coordonnées i et j de la case courante
 
                                        mov    ax, ent_Mustcaptureaftercapturei
-                                       mov    i,ax
                                        mov    ent_squarenumberi,ax
 
                                        mov    ax,ent_Mustcaptureaftercapturej
-                                       mov    j,ax
                                        mov    ent_squarenumberj,ax
 
                                        call   getSquareNumber
@@ -2164,22 +2162,22 @@ Mustcaptureaftercapture proc
 
     ; Vérification de la capture en haut à gauche
 
-                                       cmp    i, 2                                  ; Vérifier si i > 1
+                                       cmp    ent_Mustcaptureaftercapturei, 2                                  ; Vérifier si i > 1
 
                                        jl     skip_top_left_capture1
 
-                                       cmp    j, 2                                  ; Vérifier si j > 1
+                                       cmp    ent_Mustcaptureaftercapturej, 2                                  ; Vérifier si j > 1
 
                                        jl     skip_top_left_capture1
 
   
 
-                                       mov    dx, j
+                                       mov    dx, ent_Mustcaptureaftercapturej
 
                                        dec    dx
                                        mov    ent_squarenumberj, dx
 
-                                       mov    cx, i
+                                       mov    cx, ent_Mustcaptureaftercapturei
 
                                        dec    cx
                                        mov    ent_squarenumberi, cx
@@ -2200,12 +2198,12 @@ Mustcaptureaftercapture proc
   
 
     check_top_left_empty1:             
-                                       mov    dx, j
+                                       mov    dx, ent_Mustcaptureaftercapturej
 
                                        sub    dx, 2
                                        mov    ent_squarenumberj, dx
 
-                                       mov    cx, i
+                                       mov    cx, ent_Mustcaptureaftercapturei
 
                                        sub    cx, 2
                                        mov    ent_squarenumberi, cx
@@ -2222,22 +2220,22 @@ Mustcaptureaftercapture proc
     ; Capture possible en haut à gauche
                                        mov    si, q
 
-                                       mov    dx, j
+                                       mov    dx, ent_Mustcaptureaftercapturej
                                        mov    ent_squarenumberj, dx
 
-                                       mov    cx, i
+                                       mov    cx, ent_Mustcaptureaftercapturei
                                        mov    ent_squarenumberi, cx
 
                                        call   getSquareNumber
                                        mov    ax,sort_getSquareNumber
                                        mov    coor[si], ax
                                        inc    si
-                                       mov    dx, j
+                                       mov    dx, ent_Mustcaptureaftercapturej
 
                                        sub    dx, 2
                                        mov    ent_squarenumberj, dx
 
-                                       mov    cx, i
+                                       mov    cx, ent_Mustcaptureaftercapturei
 
                                        sub    cx, 2
                                        mov    ent_squarenumberi, cx
@@ -2259,21 +2257,21 @@ Mustcaptureaftercapture proc
 
     ; Vérification de la capture en haut à droite
 
-                                       cmp    i, 2                                  ; Vérifier si i > 1
+                                       cmp    ent_Mustcaptureaftercapturei, 2                                  ; Vérifier si i > 1
 
                                        jl     skip_top_right_capture1
 
-                                       cmp    j, 9                                  ; Vérifier si j < 10
+                                       cmp    ent_Mustcaptureaftercapturej, 9                                  ; Vérifier si j < 10
 
                                        jg     skip_top_right_capture1
 
   
 
-                                       mov    dx, j
+                                       mov    dx, ent_Mustcaptureaftercapturej
 
                                        inc    dx
                                        mov    ent_squarenumberj, dx
-                                       mov    cx, i
+                                       mov    cx, ent_Mustcaptureaftercapturei
 
                                        dec    cx
                                        mov    ent_squarenumberi,cx
@@ -2293,11 +2291,11 @@ Mustcaptureaftercapture proc
 
     check_top_right_empty1:            
                                      
-                                       mov    dx, j
+                                       mov    dx, ent_Mustcaptureaftercapturej
 
                                        add    dx, 2
                                        mov    ent_squarenumberj,dx
-                                       mov    cx, i
+                                       mov    cx, ent_Mustcaptureaftercapturei
 
                                        sub    cx, 2
                                        mov    ent_squarenumberi,cx
@@ -2313,21 +2311,21 @@ Mustcaptureaftercapture proc
     ; Capture possible en haut à droite
 
                                        mov    si, q
-                                       mov    dx, j
+                                       mov    dx, ent_Mustcaptureaftercapturej
                                        mov    ent_squarenumberj, dx
 
-                                       mov    cx, i
+                                       mov    cx, ent_Mustcaptureaftercapturei
                                        mov    ent_squarenumberi, cx
 
                                        call   getSquareNumber
                                        mov    ax,sort_getSquareNumber
                                        mov    coor[si], ax
                                        inc    si
-                                       mov    dx, j
+                                       mov    dx, ent_Mustcaptureaftercapturej
 
                                        add    dx, 2
                                        mov    ent_squarenumberj,dx
-                                       mov    cx, i
+                                       mov    cx, ent_Mustcaptureaftercapturei
 
                                        sub    cx, 2
                                        mov    ent_squarenumberi,cx
@@ -2355,22 +2353,22 @@ Mustcaptureaftercapture proc
 
     ; Vérification de la capture en bas à gauche
 
-                                       cmp    i, 9                                  ; Vérifier si i < 10
+                                       cmp    ent_Mustcaptureaftercapturei, 9                                  ; Vérifier si i < 10
 
                                        jg     skip_bottom_left_capture1
 
-                                       cmp    j, 2                                  ; Vérifier si j > 1
+                                       cmp    ent_Mustcaptureaftercapturej, 2                                  ; Vérifier si j > 1
 
                                        jl     skip_bottom_left_capture1
 
   
 
-                                       mov    dx, j
+                                       mov    dx, ent_Mustcaptureaftercapturej
 
                                        dec    dx
 
                                        mov    ent_squarenumberj, dx
-                                       mov    cx, i
+                                       mov    cx, ent_Mustcaptureaftercapturei
 
                                        inc    cx
                                        mov    ent_squarenumberi, cx
@@ -2389,11 +2387,11 @@ Mustcaptureaftercapture proc
 
     check_bottom_left_empty1:          
                                       
-                                       mov    dx, j
+                                       mov    dx, ent_Mustcaptureaftercapturej
 
                                        sub    dx, 2
                                        mov    ent_squarenumberj, dx
-                                       mov    cx, i
+                                       mov    cx, ent_Mustcaptureaftercapturei
 
                                        add    cx, 2
                                        mov    ent_squarenumberi,cx
@@ -2409,21 +2407,21 @@ Mustcaptureaftercapture proc
     ; Capture possible en bas à gauche
                                        mov    si, q
 
-                                       mov    dx, j
+                                       mov    dx, ent_Mustcaptureaftercapturej
                                        mov    ent_squarenumberj, dx
 
-                                       mov    cx, i
+                                       mov    cx, ent_Mustcaptureaftercapturei
                                        mov    ent_squarenumberi, cx
 
                                        call   getSquareNumber
                                        mov    ax,sort_getSquareNumber
                                        mov    coor[si], ax
                                        inc    si
-                                       mov    dx, j
+                                       mov    dx, ent_Mustcaptureaftercapturej
 
                                        sub    dx, 2
                                        mov    ent_squarenumberj, dx
-                                       mov    cx, i
+                                       mov    cx, ent_Mustcaptureaftercapturei
 
                                        add    cx, 2
                                        mov    ent_squarenumberi,cx
@@ -2444,21 +2442,21 @@ Mustcaptureaftercapture proc
 
     ; Vérification de la capture en bas à droite
 
-                                       cmp    i, 9                                  ; Vérifier si i < 10
+                                       cmp    ent_Mustcaptureaftercapturei, 9                                  ; Vérifier si i < 10
 
                                        jg     skip_bottom_right_capture1
 
-                                       cmp    j, 9                                  ; Vérifier si j < 10
+                                       cmp    ent_Mustcaptureaftercapturej, 9                                  ; Vérifier si j < 10
 
                                        jg     skip_bottom_right_capture1
 
   
 
-                                       mov    dx, j
+                                       mov    dx, ent_Mustcaptureaftercapturej
 
                                        inc    dx
                                        mov    ent_squarenumberj, dx
-                                       mov    cx, i
+                                       mov    cx, ent_Mustcaptureaftercapturei
 
                                        inc    cx
                                        mov    ent_squarenumberi, cx
@@ -2479,11 +2477,11 @@ Mustcaptureaftercapture proc
 
     check_bottom_right_empty1:         
                                   
-                                       mov    dx, j
+                                       mov    dx, ent_Mustcaptureaftercapturej
 
                                        add    dx, 2
                                        mov    ent_squarenumberj, dx
-                                       mov    cx, i
+                                       mov    cx, ent_Mustcaptureaftercapturei
 
                                        add    cx, 2
                                        mov    ent_squarenumberi, cx
@@ -2498,21 +2496,21 @@ Mustcaptureaftercapture proc
 
     ; Capture possible en bas à droite
                                        mov    si, q
-                                       mov    dx, j
+                                       mov    dx, ent_Mustcaptureaftercapturej
                                        mov    ent_squarenumberj, dx
 
-                                       mov    cx, i
+                                       mov    cx, ent_Mustcaptureaftercapturei
                                        mov    ent_squarenumberi, cx
 
                                        call   getSquareNumber
                                        mov    ax,sort_getSquareNumber
                                        mov    coor[si], ax
                                        inc    si
-                                       mov    dx, j
+                                       mov    dx, ent_Mustcaptureaftercapturej
 
                                        add    dx, 2
                                        mov    ent_squarenumberj, dx
-                                       mov    cx, i
+                                       mov    cx, ent_Mustcaptureaftercapturei
 
                                        add    cx, 2
                                        mov    ent_squarenumberi, cx
@@ -2563,9 +2561,9 @@ Mustcaptureaftercapture proc
 
     top_left_loop1:                    
                                        mov    pointt,cx
-                                       mov    dx, i
+                                       mov    dx, ent_Mustcaptureaftercapturei
 
-                                       mov    bx, j
+                                       mov    bx, ent_Mustcaptureaftercapturej
 
                                        sub    dx, cx
                                        sub    bx,cx
@@ -2610,8 +2608,8 @@ Mustcaptureaftercapture proc
   
 
     process_top_left_capture1:         
-                                       mov    dx, i
-                                       mov    bx, j
+                                       mov    dx, ent_Mustcaptureaftercapturei
+                                       mov    bx, ent_Mustcaptureaftercapturej
 
                                        sub    dx, cx
                                        sub    bx,cx
@@ -2642,8 +2640,8 @@ Mustcaptureaftercapture proc
     ; Capture possible en haut à gauche
 
                                        mov    si , qatole
-                                       mov    dx,i
-                                       mov    bx,j
+                                       mov    dx, ent_Mustcaptureaftercapturei
+                                       mov    bx, ent_Mustcaptureaftercapturej
                                        mov    ent_squarenumberi,dx
                                        mov    ent_squarenumberj,bx
                                        call   getSquareNumber
@@ -2663,9 +2661,9 @@ Mustcaptureaftercapture proc
 
     additional_top_left_jumps1:        
 
-                                       mov    dx, i
+                                       mov    dx, ent_Mustcaptureaftercapturei
 
-                                       mov    bx, j
+                                       mov    bx, ent_Mustcaptureaftercapturej
 
                                        sub    dx, cxx
                                        sub    bx,cxx
@@ -2693,9 +2691,9 @@ Mustcaptureaftercapture proc
 
                                        mov    si,qatole
 
-                                       mov    dx, i
+                                       mov    dx, ent_Mustcaptureaftercapturei
 
-                                       mov    bx, j
+                                       mov    bx, ent_Mustcaptureaftercapturej
 
                                        sub    dx, cxx
                                        sub    bx,cxx
@@ -2752,9 +2750,9 @@ Mustcaptureaftercapture proc
 
     top_right_loop1:                   
                                        mov    pointt,cx
-                                       mov    dx, i
+                                       mov    dx, ent_Mustcaptureaftercapturei
 
-                                       mov    bx, j
+                                       mov    bx, ent_Mustcaptureaftercapturej
 
                                        sub    dx,cx
 
@@ -2802,9 +2800,9 @@ Mustcaptureaftercapture proc
   
 
     process_top_right_capture1:        
-                                       mov    dx, i
+                                       mov    dx, ent_Mustcaptureaftercapturei
 
-                                       mov    bx, j
+                                       mov    bx, ent_Mustcaptureaftercapturej
 
                                        sub    dx,cx
                                        dec    dx
@@ -2832,8 +2830,8 @@ Mustcaptureaftercapture proc
 
     ; Capture possible en haut à droite
                                        mov    si , qatori
-                                       mov    dx,i
-                                       mov    bx,j
+                                       mov    dx, ent_Mustcaptureaftercapturei
+                                       mov    bx, ent_Mustcaptureaftercapturej
                                        mov    ent_squarenumberi,dx
                                        mov    ent_squarenumberj,bx
                                        call   getSquareNumber
@@ -2853,9 +2851,9 @@ Mustcaptureaftercapture proc
 
     additional_top_right_jumps1:       
 
-                                       mov    dx, i
+                                       mov    dx, ent_Mustcaptureaftercapturei
 
-                                       mov    bx, j
+                                       mov    bx, ent_Mustcaptureaftercapturej
 
                                        sub    dx,cxx
 
@@ -2884,9 +2882,9 @@ Mustcaptureaftercapture proc
 
   
                                        mov    si,qatori
-                                       mov    dx, i
+                                       mov    dx, ent_Mustcaptureaftercapturei
 
-                                       mov    bx, j
+                                       mov    bx, ent_Mustcaptureaftercapturej
 
                                        sub    dx,cxx
 
@@ -2946,9 +2944,9 @@ Mustcaptureaftercapture proc
 
     bottom_left_loop1:                 
                                        mov    pointt,cx
-                                       mov    dx, i
+                                       mov    dx, ent_Mustcaptureaftercapturei
 
-                                       mov    bx, j
+                                       mov    bx, ent_Mustcaptureaftercapturej
 
                                        add    dx,cx
 
@@ -3000,9 +2998,9 @@ Mustcaptureaftercapture proc
 
     process_bottom_left_capture1:      
                                       
-                                       mov    dx, i
+                                       mov    dx, ent_Mustcaptureaftercapturei
 
-                                       mov    bx, j
+                                       mov    bx, ent_Mustcaptureaftercapturej
 
                                        add    dx,cx
                                        inc    dx
@@ -3031,8 +3029,8 @@ Mustcaptureaftercapture proc
 
     ; Capture possible en bas à gauche
                                        mov    si , qabole
-                                       mov    dx,i
-                                       mov    bx,j
+                                       mov    dx, ent_Mustcaptureaftercapturei
+                                       mov    bx, ent_Mustcaptureaftercapturej
                                        mov    ent_squarenumberi,dx
                                        mov    ent_squarenumberj,bx
                                        call   getSquareNumber
@@ -3050,9 +3048,9 @@ Mustcaptureaftercapture proc
 
     additional_bottom_left_jumps1:     
 
-                                       mov    dx, i
+                                       mov    dx, ent_Mustcaptureaftercapturei
 
-                                       mov    bx, j
+                                       mov    bx, ent_Mustcaptureaftercapturej
 
                                        add    dx,cxx
 
@@ -3081,9 +3079,9 @@ Mustcaptureaftercapture proc
 
   
                                        mov    si,qabole
-                                       mov    dx, i
+                                       mov    dx, ent_Mustcaptureaftercapturei
 
-                                       mov    bx, j
+                                       mov    bx, ent_Mustcaptureaftercapturej
 
                                        add    dx,cxx
 
@@ -3145,9 +3143,9 @@ Mustcaptureaftercapture proc
 
     bottom_right_loop1:                
                                        mov    pointt,cx
-                                       mov    dx, i
+                                       mov    dx, ent_Mustcaptureaftercapturei
 
-                                       mov    bx, j
+                                       mov    bx, ent_Mustcaptureaftercapturej
 
                                        add    dx,cx
                                        add    bx,cx
@@ -3198,9 +3196,9 @@ Mustcaptureaftercapture proc
 
     process_bottom_right_capture1:     
                                       
-                                       mov    dx, i
+                                       mov    dx, ent_Mustcaptureaftercapturei
 
-                                       mov    bx, j
+                                       mov    bx, ent_Mustcaptureaftercapturej
 
                                        add    dx,cx
                                        inc    dx
@@ -3229,8 +3227,8 @@ Mustcaptureaftercapture proc
 
     ; Capture possible en bas à droite
                                        mov    si , qabori
-                                       mov    dx,i
-                                       mov    bx,j
+                                       mov    dx, ent_Mustcaptureaftercapturei
+                                       mov    bx, ent_Mustcaptureaftercapturej
                                        mov    ent_squarenumberi,dx
                                        mov    ent_squarenumberj,bx
                                        call   getSquareNumber
@@ -3251,9 +3249,9 @@ Mustcaptureaftercapture proc
 
     additional_bottom_right_jumps1:    
 
-                                       mov    dx, i
+                                       mov    dx, ent_Mustcaptureaftercapturei
 
-                                       mov    bx, j
+                                       mov    bx, ent_Mustcaptureaftercapturej
 
                                        add    dx,cxx
                                        add    bx,cxx
@@ -3281,9 +3279,9 @@ Mustcaptureaftercapture proc
 
   
                                        mov    si,qabori
-                                       mov    dx, i
+                                       mov    dx, ent_Mustcaptureaftercapturei
 
-                                       mov    bx, j
+                                       mov    bx, ent_Mustcaptureaftercapturej
 
                                        add    dx,cxx
                                        add    bx,cxx
