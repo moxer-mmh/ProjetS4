@@ -22,6 +22,7 @@ DATA SEGMENT PARA 'DATA'
     sort_getSquareState          dw  ?
     sort_Mustcapture             dw  ?
     sort_Mustcaptureaftercapture dw  ?
+    sort_verifqueens             dw  ?
 
     ent_squarenumberi            dw  ?
     ent_squarenumberj            dw  ?
@@ -33,7 +34,11 @@ DATA SEGMENT PARA 'DATA'
     ent_printj                   dw  ?
     ent_Mustcaptureaftercapturei dw  ?
     ent_Mustcaptureaftercapturej dw  ?
-
+    ent_verifqueens_i            dw  ?
+    ent_verifqueens_j            dw  ?
+    ent_verifqueens_x            dw  ?
+    ent_verifqueens_y            dw  ?
+    ent_verifqueens_testtable    dw  50 dup(?)
 
     newline                      dw  0Dh,0Ah, '$'
     error1                       dw  'Erreur : N doit etre entre 1 et 50.', 0Dh, 0Ah, '$'
@@ -89,6 +94,11 @@ DATA SEGMENT PARA 'DATA'
     currentQueen                 db  ?
     opponentPiece                db  ?
     opponentQueen                db  ?
+
+    found                        dw  ?
+    k                            dw  ?
+    p                            dw  ?
+    msg                          db  'Vous devez capturer un pion adverse avec votre dame.', 10, 13, '$'
 
 
     yes1                         db  'yes1 $'
@@ -654,6 +664,100 @@ AfficherDamier proc
                                        pop    ax
                                        ret
 AfficherDamier endp
+
+verifqueens proc
+                                       push   ax
+                                       push   bx
+                                       push   cx
+                                       push   dx
+                                       push   bp
+                                       mov    bp, sp
+                                       mov    found, 0
+                                       mov    k, 1
+                                       mov    p, 0
+    
+    loop1verifqueens:                  
+                                       mov    cx,k
+                                       cmp    cx, 50
+                                       jge    loop1_endverifqueens
+        
+                                       mov    si, 0
+    loop2verifqueens:                  
+                                       mov    ax, ent_verifqueens_testtable[si]
+                                       cmp    ax, -1
+                                       je     loop2_endverifqueens
+            
+                                       push   si
+                                       mov    ax, ent_verifqueens_i
+                                       mov    ent_squarenumberi, ax
+                                       mov    ax, ent_verifqueens_j
+                                       mov    ent_squarenumberj, ax
+                                       call   getSquareNumber
+                                       mov    ax,sort_getSquareNumber
+                                       mov    si,p
+                                       cmp    ax, ent_verifqueens_testtable[si]
+                                       pop    si
+            
+                                       jne    skipverifqueens
+            
+                                       push   si
+                                       mov    ax, ent_verifqueens_x
+                                       mov    ent_squarenumberi, ax
+                                       mov    ax, ent_verifqueens_y
+                                       mov    ent_squarenumberj, ax
+                                       call   getSquareNumber
+                                       mov    ax,sort_getSquareNumber
+                                       mov    si,k
+                                       cmp    ax, ent_verifqueens_testtable[si]
+                                       pop    si
+            
+                                       jne    skipverifqueens
+                                       mov    cx,found
+                                       mov    cx, 1
+                                       mov    found ,cx
+                                       jmp    loop1_endverifqueens
+            
+    skipverifqueens:                   
+                                       inc    si
+                                       jmp    loop2verifqueens
+    loop2_endverifqueens:              
+                                       mov    cx,k
+                                       inc    cx
+                                       mov    k,cx
+                                       push si
+                                       mov si,k
+                                       cmp    ent_verifqueens_testtable[si], 0
+                                       pop si
+                                       je     loop1verifqueens
+                                       mov    cx,k
+                                       mov    dx,p
+                                       add    dx,cx
+                                       mov    p,dx
+                                       inc    cx
+                                       mov    k,cx
+                                       jmp    loop1verifqueens
+    loop1_endverifqueens:              
+                                       mov    cx,found
+                                       cmp    found, cx
+                                       jne    endverifqueens
+    
+    ; Afficher "Vous devez capturer un pion adverse avec votre dame."
+                                       lea    dx, msg
+                                       call   puts
+                                       mov    sort_verifqueens, 1
+                                       jmp    exitverifqueens
+    
+    endverifqueens:                    
+                                       mov    sort_verifqueens, 0
+    
+    exitverifqueens:                   
+                                       pop    bp
+                                       pop    dx
+                                       pop    cx
+                                       pop    bx
+                                       pop    ax
+                                       ret
+verifqueens endp
 
 Mustcapture proc
 
@@ -2162,11 +2266,11 @@ Mustcaptureaftercapture proc
 
     ; Vérification de la capture en haut à gauche
 
-                                       cmp    ent_Mustcaptureaftercapturei, 2                                  ; Vérifier si i > 1
+                                       cmp    ent_Mustcaptureaftercapturei, 2       ; Vérifier si i > 1
 
                                        jl     skip_top_left_capture1
 
-                                       cmp    ent_Mustcaptureaftercapturej, 2                                  ; Vérifier si j > 1
+                                       cmp    ent_Mustcaptureaftercapturej, 2       ; Vérifier si j > 1
 
                                        jl     skip_top_left_capture1
 
@@ -2257,11 +2361,11 @@ Mustcaptureaftercapture proc
 
     ; Vérification de la capture en haut à droite
 
-                                       cmp    ent_Mustcaptureaftercapturei, 2                                  ; Vérifier si i > 1
+                                       cmp    ent_Mustcaptureaftercapturei, 2       ; Vérifier si i > 1
 
                                        jl     skip_top_right_capture1
 
-                                       cmp    ent_Mustcaptureaftercapturej, 9                                  ; Vérifier si j < 10
+                                       cmp    ent_Mustcaptureaftercapturej, 9       ; Vérifier si j < 10
 
                                        jg     skip_top_right_capture1
 
@@ -2353,11 +2457,11 @@ Mustcaptureaftercapture proc
 
     ; Vérification de la capture en bas à gauche
 
-                                       cmp    ent_Mustcaptureaftercapturei, 9                                  ; Vérifier si i < 10
+                                       cmp    ent_Mustcaptureaftercapturei, 9       ; Vérifier si i < 10
 
                                        jg     skip_bottom_left_capture1
 
-                                       cmp    ent_Mustcaptureaftercapturej, 2                                  ; Vérifier si j > 1
+                                       cmp    ent_Mustcaptureaftercapturej, 2       ; Vérifier si j > 1
 
                                        jl     skip_bottom_left_capture1
 
@@ -2442,11 +2546,11 @@ Mustcaptureaftercapture proc
 
     ; Vérification de la capture en bas à droite
 
-                                       cmp    ent_Mustcaptureaftercapturei, 9                                  ; Vérifier si i < 10
+                                       cmp    ent_Mustcaptureaftercapturei, 9       ; Vérifier si i < 10
 
                                        jg     skip_bottom_right_capture1
 
-                                       cmp    ent_Mustcaptureaftercapturej, 9                                  ; Vérifier si j < 10
+                                       cmp    ent_Mustcaptureaftercapturej, 9       ; Vérifier si j < 10
 
                                        jg     skip_bottom_right_capture1
 
