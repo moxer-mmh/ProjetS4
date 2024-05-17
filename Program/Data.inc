@@ -1,7 +1,0 @@
-STACK SEGMENT 
-          DB 64 DUP(?)
-STACK ENDS
-DATA SEGMENT 
-    
-
-DATA ENDS
