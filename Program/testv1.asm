@@ -2,7 +2,7 @@ STACK SEGMENT PARA STACK
           DB 64 DUP(?)
 STACK ENDS
 
-
+include "C:\EMU8086\inc\emu8086.inc"
 DATA SEGMENT PARA 'DATA'
     N                            dw  ?
     i                            dw  ?
@@ -26,8 +26,6 @@ DATA SEGMENT PARA 'DATA'
     sort_Mustcaptureaftercapture dw  ?
     sort_verifqueens             dw  ?
 
-    ent_squarenumberi            dw  ?
-    ent_squarenumberj            dw  ?
     ent_squarecolori             dw  ?
     ent_squarecolorj             dw  ?
     ent_squarestatei             dw  ?
@@ -127,7 +125,6 @@ main proc
 
                                        mov    board[27], WHITE_QUEEN
                                        mov    board[22], BLACK_PAWN
-                                       call   AfficherDamier
 
                                        mov    ent_Mustcaptureaftercapturei,6
                                        mov    ent_Mustcaptureaftercapturej,5
@@ -166,653 +163,560 @@ main proc
 
 main endp
 
-getRow proc
-    ; Sauvegarder les valeurs des registres sur la pile
-    push ax
-    push bx
-    push cx
-    push dx
-    push bp
+GET_ROW MACRO N
+    LOCAL errorgetRow, donegetRow
+    push   ax
+    push   bx
+    push   cx
+    push   dx
+    push   bp
+    mov    bp, sp
 
-    ; Initialiser le pointeur de base
-    mov bp, sp
+    mov    ax, N
+    cmp    al, 1
+    jl     errorgetRow
+    cmp    al, 50
+    jg     errorgetRow
 
-    ; Déplacer la valeur de N dans ax
-    mov ax, N
+    sub    al, 1
+    mov    ah, 0
+    mov    bl, 5
+    div    bl
+    add    al, 1
 
-    ; Vérifier si N est inférieur à 1
-    cmp al, 1
-    jl errorgetRow
+    jmp    donegetRow
 
-    ; Vérifier si N est supérieur à 50
-    cmp al, 50
-    jg errorgetRow
+errorgetRow:                       
+    lea    dx, newline
+    call   puts
 
-    ; Soustraire 1 de N (car les rangées sont indexées à partir de 0)
-    sub al, 1
+    lea    dx, error1
+    call   puts
+    mov    ax, 0
 
-    ; Effacer le demi-registre supérieur de ax
-    mov ah, 0
+donegetRow:                        
+    mov    ah, 0
+    mov    sort_getRow, ax
+    pop    bp
+    pop    dx
+    pop    cx
+    pop    bx
+    pop    ax
+ENDM
 
-    ; Diviser N par 5 pour obtenir le numéro de rangée
-    mov bl, 5
-    div bl
+GET_COLUMN MACRO N
+    LOCAL errorgetcolumn, done_column, odd_row, last_column
+    push   ax
+    push   bx
+    push   cx
+    push   dx
+    push   bp
+    mov    bp, sp
 
-    ; Ajouter 1 au numéro de rangée (car nous avons soustrait 1 précédemment)
-    add al, 1
+    mov    ax, N
+    cmp    al, 1
+    jl     errorgetcolumn
+    cmp    al, 50
+    jg     errorgetcolumn
 
-    ; Sauter à donegetRow pour éviter la gestion des erreurs
-    jmp donegetRow
+    push   ax
+    GET_ROW N
+    pop    bx
 
-errorgetRow:
-    ; Imprimer une nouvelle ligne
-    lea dx, newline
-    call puts
+    test   al, 1
+    jnz    odd_row
 
-    ; Imprimer un message d'erreur
-    lea dx, error1
-    call puts
+    mov    ax, N
+    mov    cl, 10
+    mov    dx, 0
+    div    cl
+    cmp    ah, 0
+    je     last_column
 
-    ; Définir la valeur de retour à 0 (indiquant une erreur)
-    mov ax, 0
+    mov    ax, N
+    mov    cl, 10
+    mov    dx, 0
+    div    cl
+    mov    al, ah
+    mov    ah, 0
+    mov    cx, 2
+    mul    cx
+    sub    ax, 11
+    jmp    done_column
 
-donegetRow:
-    ; Effacer le demi-registre supérieur de ax (au cas où il a été modifié lors de la gestion des erreurs)
-    mov ah, 0
+odd_row:                           
+    mov    ax, N
+    mov    cl, 10
+    mov    dx, 0
+    div    cl
+    mov    al, ah
+    mov    ah, 0
+    mov    cx, 2
+    mul    cx
+    jmp    done_column
 
-    ; Stocker le numéro de rangée dans la variable sort_getRow
-    mov sort_getRow, ax
+last_column:                       
+    mov    ax, 9
 
-    ; Restaurer les valeurs des registres depuis la pile
-    pop bp
-    pop dx
-    pop cx
-    pop bx
-    pop ax
+    jmp    done_column
 
-    ; Retourner de la procédure
-    ret
-getRow endp
+errorgetcolumn:                    
+    lea    dx, newline
+    call   puts
 
-getColumn proc
-    ; Sauvegarder les valeurs des registres sur la pile
-    push ax
-    push bx 
-    push cx
-    push dx
-    push bp
-    mov bp, sp
+    lea    dx, error1
+    call   puts
+    mov    ax, 0
 
-    ; Déplacer la valeur de N dans ax
-    mov ax, N
-    
-    ; Vérifier si N est inférieur à 1
-    cmp al, 1 
-    jl errorgetcolumn
-    
-    ; Vérifier si N est supérieur à 50
-    cmp al, 50
-    jg errorgetcolumn
+done_column:                       
+    mov    ah, 0
+    mov    sort_getColumn, ax
+    pop    bp
+    pop    dx
+    pop    cx
+    pop    bx
+    pop    ax
+ENDM
 
-    ; Appeler la fonction getRow pour vérifier si la rangée est paire ou impaire
-    push ax                 ; Sauvegarder N sur la pile
-    call getRow             ; AX contient maintenant la valeur de la rangée
-    pop bx                  ; Restaurer N dans le registre BX
+GET_SQUARE_NUMBER MACRO i, j
+    LOCAL errorgetSquareNumber, donegetSquareNumber, msgcaseblanche
+    push   ax
+    push   bx
+    push   cx
+    push   dx
+    push   bp
+    mov    bp, sp
 
-    ; Vérifier si la rangée est paire ou impaire
-    test al, 1              ; Vérifier si le bit de poids faible est défini
-    jnz odd_row             ; Sauter à odd_row si la rangée est impaire
+    mov    ax, i
+    mov    bx, j
 
-    ; Rangée paire
-    mov ax, N               ; Déplacer N dans le registre AX
-    mov cl, 10              ; Définir CL à 10 pour la division
-    mov dx, 0
-    div cl                  ; Diviser AX par 10 (quotient dans AX, reste dans DL)
-    cmp ah, 0               ; Vérifier si le reste est 0
-    je last_column          ; Sauter à last_column si le reste est 0
+    cmp    al, 1
+    jl     errorgetSquareNumber
+    cmp    al, 10
+    jg     errorgetSquareNumber
 
-    ; Calculer la valeur de colonne pour une rangée paire
-    mov ax, N
-    mov cl, 10
-    mov dx, 0
-    div cl
-    mov al, ah
-    mov ah, 0
-    mov cx, 2
-    mul cx
-    sub ax, 11
-    jmp done_column         ; Sauter à done_column
+    cmp    bl, 1
+    jl     errorgetSquareNumber
+    cmp    bl, 10
+    jg     errorgetSquareNumber
 
-odd_row:
-    ; Rangée impaire
-    mov ax, N
-    mov cl, 10
-    mov dx, 0
-    div cl
-    mov al, ah
-    mov ah, 0
-    mov cx, 2
-    mul cx
-    jmp done_column         ; Sauter à done_column
+    add    al, bl
+    mov    ah, 0
+    mov    bl, 2
+    div    bl
 
-last_column:
-    mov ax, 9               ; Définir la valeur de colonne à 9 pour la dernière colonne
-    jmp done_column
+    cmp    ah, 0
+    je     msgcaseblanche
 
-errorgetcolumn:
-    lea dx, newline
-    call puts
+    mov    dx, i
+    sub    dl, 1
+    mov    al, dl
+    mov    bl, 5
+    mul    bl
 
-    lea dx, error1
-    call puts
-    mov ax, 0
+    mov    dx, j
+    add    dl, 1
+    mov    cx, ax
+    mov    ax, dx
+    mov    ah, 0
+    mov    bl, 2
+    div    bl
+    add    ax, cx
 
-done_column:
-    mov ah, 0
-    mov sort_getColumn, ax  ; Stocker la valeur de colonne dans la variable sort_getColumn
-    pop bp
-    pop dx
-    pop cx
-    pop bx
-    pop ax
-    ret
+    jmp    donegetSquareNumber
 
-getColumn endp
+errorgetSquareNumber:               
+    lea    dx, newline
+    call   puts
 
-getSquareNumber proc
-    ; Sauvegarder les valeurs des registres sur la pile
-    push ax
-    push bx
-    push cx
-    push dx
-    push bp
-    mov bp, sp
+    lea    dx, error2
+    call   puts
+    mov    ax, 0
 
-    ; Déplacer les valeurs de ent_squarenumberi et ent_squarenumberj dans ax et bx
-    mov ax, ent_squarenumberi
-    mov bx, ent_squarenumberj
+    jmp    donegetSquareNumber
 
-    ; Vérifier si les valeurs sont en dehors de la plage [1, 10]
-    cmp al, 1
-    jl errorgetSquareNumber
-    cmp al, 10
-    jg errorgetSquareNumber
+msgcaseblanche:                    
+    mov    ax, 0
 
-    cmp bl, 1
-    jl errorgetSquareNumber
-    cmp bl, 10
-    jg errorgetSquareNumber
+donegetSquareNumber:               
+    mov    ah, 0
+    mov    sort_getSquareNumber, ax
+    pop    bp
+    pop    dx
+    pop    cx
+    pop    bx
+    pop    ax
+ENDM
 
-    ; Calculer le numéro de la case
-    add al, bl
-    mov ah, 0
-    mov bl, 2
-    div bl
+GET_SQUARE_COLOR MACRO i, j
+    LOCAL white_square, done_color
+    push   ax
+    push   bx
+    push   cx
+    push   dx
+    push   bp
+    mov    bp, sp
 
-    ; Vérifier si la case est blanche
-    cmp ah, 0
-    je msgcaseblanche
+    GET_SQUARE_NUMBER i, j
+    mov    ax, sort_getSquareNumber
+    cmp    ax, 0
+    je     white_square
 
-    ; Calculer le numéro de la case pour une case noire
-    mov dx, ent_squarenumberi
-    sub dl, 1
-    mov al, dl
-    mov bl, 5
-    mul bl
+    mov    ax, BLACK
+    jmp    done_color
 
-    mov dx, ent_squarenumberj
-    add dl, 1
-    mov cx, ax
-    mov ax, dx
-    mov ah, 0
-    mov bl, 2
-    div bl
-    add ax, cx
+white_square:                      
+    mov    ax, i
+    mov    bx, j
 
-    jmp donegetSquareNumber
+    cmp    al, 1
+    jl     done_color
+    cmp    al, 10
+    jg     done_color
 
-errorgetSquareNumber:
-    ; Imprimer un message d'erreur
-    lea dx, newline
-    call puts
-    lea dx, error2
-    call puts
-    mov ax, 0
-    jmp donegetSquareNumber
+    cmp    bl, 1
+    jl     done_color
+    cmp    bl, 10
+    jg     done_color
 
-msgcaseblanche:
-    ; Cas spécial pour une case blanche
-    mov ax, 0
+    mov    ax, WHITE
 
-donegetSquareNumber:
-    mov ah, 0
-    mov sort_getSquareNumber, ax ; Stocker le résultat dans sort_getSquareNumber
-    pop bp
-    pop dx
-    pop cx
-    pop bx
-    pop ax
-    ret
-getSquareNumber endp
+done_color:                        
+    mov    sort_getSquareColor, ax
+    pop    bp
+    pop    dx
+    pop    cx
+    pop    bx
+    pop    ax
+ENDM
 
-getSquareColor proc
-    ; Sauvegarder les valeurs des registres sur la pile
-    push ax
-    push bx
-    push cx
-    push dx
-    push bp
-    mov bp, sp
+GET_SQUARE_STATE MACRO i, j
+    LOCAL case_vide, pion_blanc, pion_noir, dame_blanche, dame_noire, done_state
+    push   ax
+    push   bx
+    push   cx
+    push   dx
+    push   bp
+    mov    bp, sp
 
-    ; Déplacer les valeurs de ent_squarecolori et ent_squarecolorj dans ax et bx
-    mov ax, ent_squarecolori
-    mov bx, ent_squarecolorj
+    ; Call the GET_SQUARE_NUMBER macro
+    GET_SQUARE_NUMBER i, j
+    mov    ax, sort_getSquareNumber
+    mov    si, ax
 
-    ; Appeler getSquareNumber pour obtenir le numéro de la case
-    mov ent_squarenumberi, ax
-    mov ent_squarenumberj, bx
-    call getSquareNumber
-    mov ax, sort_getSquareNumber
-    cmp ax, 0
-    je white_square
+    ; Check the state of the square on the board
+    mov    dl, board[si-1]
+    cmp    dl, 0
+    je     case_vide
+    cmp    dl, 1
+    je     pion_blanc
+    cmp    dl, 2
+    je     pion_noir
+    cmp    dl, 3
+    je     dame_blanche
+    cmp    dl, 4
+    je     dame_noire
 
-    ; Cas d'une case noire
-    mov ax, BLACK
-    jmp done_color
+case_vide:                         
+    mov    ax, 0
+    jmp    done_state
 
-white_square:
-    ; Vérifier si les valeurs sont dans la plage [1, 10]
-    mov ax, ent_squarecolori
-    mov bx, ent_squarecolorj
+pion_blanc:                        
+    mov    ax, 1
+    jmp    done_state
 
-    cmp al, 1
-    jl done_color
-    cmp al, 10
-    jg done_color
+pion_noir:                         
+    mov    ax, 2
+    jmp    done_state
 
-    cmp bl, 1
-    jl done_color
-    cmp bl, 10
-    jg done_color
+dame_blanche:                      
+    mov    ax, 3
+    jmp    done_state
 
-    ; Cas d'une case blanche
-    mov ax, WHITE
+dame_noire:                        
+    mov    ax, 4
 
-done_color:
-    mov sort_getSquareColor, ax ; Stocker le résultat dans sort_getSquareColor
-    pop bp
-    pop dx
-    pop cx
-    pop bx
-    pop ax
-    ret
-getSquareColor endp
-
-getSquareState proc
-    ; Sauvegarder les valeurs des registres sur la pile
-    push ax
-    push bx
-    push cx
-    push dx
-    push bp
-    mov bp, sp
-
-    ; Déplacer les valeurs de ent_squarestatei et ent_squarestatej dans ax et bx
-    mov ax, ent_squarestatei
-    mov bx, ent_squarestatej
-
-    ; Appeler getSquareNumber pour obtenir le numéro de la case
-    mov ent_squarenumberi, ax
-    mov ent_squarenumberj, bx
-
-    call getSquareNumber
-    mov ax, sort_getSquareNumber
-    mov si, ax
-
-    ; Vérifier l'état de la case à partir du tableau board
-    mov dl, board[si-1]
-    cmp dl, 0
-    je case_vide
-    cmp dl, 1
-    je pion_blanc
-    cmp dl, 2
-    je pion_noir
-    cmp dl, 3
-    je dame_blanche
-    cmp dl, 4
-    je dame_noire
-
-case_vide:
-    mov ax, 0
-    jmp done_state
-
-pion_blanc:
-    mov ax, 1
-    jmp done_state
-
-pion_noir:
-    mov ax, 2
-    jmp done_state
-
-dame_blanche:
-    mov ax, 3
-    jmp done_state
-
-dame_noire:
-    mov ax, 4
-
-done_state:
-    mov sort_getSquareState, ax ; Stocker le résultat dans sort_getSquareState
-    pop bp
-    pop dx
-    pop cx
-    pop bx
-    pop ax
-    ret
-getSquareState endp
+done_state:                        
+    mov    sort_getSquareState, ax
+    pop    bp
+    pop    dx
+    pop    cx
+    pop    bx
+    pop    ax
+ENDM
 
 InitialiserDamier proc
-    ; Sauvegarder les valeurs des registres sur la pile
-    push ax
-    push bx
-    push cx
-    push dx
-    push bp
-    mov bp, sp
+                                       push   ax
+                                       push   bx
+                                       push   cx
+                                       push   dx
+                                       push   bp
+                                       mov    bp, sp
 
-    ; Initialiser le compteur de boucle à 0
-    mov cx, 0
+                                       mov    cx, 0                                 ; Initialize loop counter to 0
+                                       mov    bx, offset board                      ; Get the offset of the board array
 
-    ; Obtenir l'offset du tableau board
-    mov bx, offset board
+    loop_init:                         
+                                       cmp    cx, 20                                ; Check if index is less than 20
+                                       jl     init_black                            ; Jump to init_black if index is less than 20
+                                       cmp    cx, 30                                ; Check if index is greater than 29
+                                       jge    init_white                            ; Jump to init_white if index is greater than or equal to 30
+                                       mov    [bx], 0                               ; Set the current board element to EMPTY (0)
+                                       jmp    next_index
 
-loop_init:
-    ; Vérifier si l'index est inférieur à 20
-    cmp cx, 20
-    jl init_black
+    init_black:                        
+                                       mov    [bx], 2                               ; Set the current board element to BLACK_PAWN (2)
+                                       jmp    next_index
 
-    ; Vérifier si l'index est supérieur ou égal à 30
-    cmp cx, 30
-    jge init_white
+    init_white:                        
+                                       mov    [bx], 1                               ; Set the current board element to WHITE_PAWN (1)
 
-    ; Initialiser l'élément courant du tableau à EMPTY (0)
-    mov [bx], 0
-    jmp next_index
+    next_index:                        
+                                       inc    bx                                    ; Move to the next element in the board array
+                                       inc    cx                                    ; Increment the loop counter
+                                       cmp    cx, 50                                ; Check if all 50 elements have been initialized
+                                       jl     loop_init                             ; Continue the loop if not all elements have been initialized
+                                       pop    bp
+                                       pop    dx
+                                       pop    cx
+                                       pop    bx
+                                       pop    ax
+                                       ret
 
-init_black:
-    ; Initialiser l'élément courant du tableau à BLACK_PAWN (2)
-    mov [bx], 2
-    jmp next_index
-
-init_white:
-    ; Initialiser l'élément courant du tableau à WHITE_PAWN (1)
-    mov [bx], 1
-
-next_index:
-    ; Passer à l'élément suivant du tableau
-    inc bx
-    inc cx
-
-    ; Vérifier si tous les 50 éléments ont été initialisés
-    cmp cx, 50
-    jl loop_init
-
-    ; Restaurer les valeurs des registres depuis la pile
-    pop bp
-    pop dx
-    pop cx
-    pop bx
-    pop ax
-    ret
 InitialiserDamier endp
 
 printSquare proc
-    push bp
-    mov bp, sp
+                                       push   bp
+                                       mov    bp, sp
 
-    ; Déplacer les valeurs de ent_printi et ent_printj dans ax et bx
-    mov ax, ent_printi
-    mov bx, ent_printj
+                                       mov    ax, ent_printi
+                                       mov    bx, ent_printj
 
-    ; Initialiser les variables pour les appels à getSquareState et getSquareColor
-    mov ent_squarecolori, ax
-    mov ent_squarecolorj, bx
-    mov ent_squarestatei, ax
-    mov ent_squarestatej, bx
+                                       mov    ent_squarecolori, ax
+                                       mov    ent_squarecolorj, bx
+                                       mov    ent_squarestatei, ax
+                                       mov    ent_squarestatej, bx
 
-    ; Appeler getSquareState et getSquareColor pour obtenir l'état et la couleur de la case
-    call getSquareState
-    call getSquareColor
-    mov ax, sort_getSquareColor
-    cmp ax, WHITE
-    je print_white
+                                       GET_SQUARE_STATE ax, bx
+                                       GET_SQUARE_COLOR ax, bx
+                                       mov    ax, sort_getSquareColor
+                                       cmp    ax, WHITE
+                                       je     print_white
+                                       mov    ax, sort_getSquareState
 
-    ; Vérifier l'état de la case et imprimer le contenu correspondant
-    mov ax, sort_getSquareState
-    cmp ax, EMPTY
-    je EMPTY
-    cmp ax, WHITE_PAWN
-    je WHITE_PAWN
-    cmp ax, BLACK_PAWN
-    je BLACK_PAWN
-    cmp ax, WHITE_QUEEN
-    je WHITE_QUEEN
-    cmp ax, BLACK_QUEEN
-    je BLACK_QUEEN
 
-EMPTY:
-    lea dx, vide
-    call puts
-    jmp done_printstate
+                                       cmp    ax, EMPTY
+                                       je     EMPTY
+                                       cmp    ax, WHITE_PAWN
+                                       je     WHITE_PAWN
+                                       cmp    ax, BLACK_PAWN
+                                       je     BLACK_PAWN
+                                       cmp    ax, WHITE_QUEEN
+                                       je     WHITE_QUEEN
+                                       cmp    ax, BLACK_QUEEN
+                                       je     BLACK_QUEEN
 
-WHITE_PAWN:
-    lea dx, pionblanc
-    call puts
-    jmp done_printstate
+    EMPTY:                             
+                                       lea    dx, vide
+                                       call   puts
+                                       jmp    done_printstate
 
-BLACK_PAWN:
-    lea dx, pionnoir
-    call puts
-    jmp done_printstate
+    WHITE_PAWN:                        
 
-WHITE_QUEEN:
-    lea dx, dameblanche
-    call puts
-    jmp done_printstate
+                                       lea    dx, pionblanc
+                                       call   puts
+                                       jmp    done_printstate
 
-BLACK_QUEEN:
-    lea dx, damenoire
-    call puts
-    jmp done_printstate
+    BLACK_PAWN:                        
 
-print_white:
-    ; Imprimer une case vide pour une case blanche
-    lea dx, vd
-    call puts
 
-done_printstate:
-    pop bp
-    ret
+                                       lea    dx, pionnoir
+                                       call   puts
+                                       jmp    done_printstate
+
+    WHITE_QUEEN:                       
+
+                                       lea    dx, dameblanche
+                                       call   puts
+                                       jmp    done_printstate
+
+    BLACK_QUEEN:                       
+
+                                       lea    dx, damenoire
+                                       call   puts
+                                       jmp    done_printstate
+
+    print_white:                       
+
+                                       lea    dx, vd
+                                       call   puts
+
+    done_printstate:                   
+
+                                       pop    bp
+                                       ret
+
+
 printSquare endp
 
 AfficherDamier proc
-    ; Sauvegarder les valeurs des registres sur la pile
-    push ax
-    push bx
-    push cx
-    push dx
-    push bp
-    mov bp, sp
+                                       push   ax
+                                       push   bx
+                                       push   cx
+                                       push   dx
+                                       push   bp
+                                       mov    bp, sp
 
-    mov cx, 1
-outer_loop:
-    mov dx, 1
+                                       mov    cx, 1
+    outer_loop:                        
+                                       mov    dx, 1
 
-inner_loop:
-    ; Initialiser les variables pour l'appel à printSquare
-    mov ent_printi, cx
-    mov ent_printj, dx
+    inner_loop:                        
 
-    ; Appeler printSquare pour afficher la case
-    call printSquare
+                                       mov    ent_printi, cx
+                                       mov    ent_printj, dx
 
-    ; Restaurer les valeurs de ent_printi et ent_printj
-    mov cx, ent_printi
-    mov dx, ent_printj
+                                       call   printSquare
 
-    ; Passer à la colonne suivante
-    inc dx
-    cmp dx, 11
-    jl inner_loop
+                                       mov    cx, ent_printi
+                                       mov    dx, ent_printj
 
-    ; Vérifier si toutes les colonnes ont été affichées
-    cmp dx, 11
-    je print_row
+                                       inc    dx
+                                       cmp    dx, 11
+                                       jl     inner_loop
 
-ret_print_row:
-    ; Imprimer deux nouvelles lignes pour séparer les rangées
-    lea dx, newline
-    call puts
-    lea dx, newline
-    call puts
+                                       cmp    dx, 11
+                                       je     print_row
 
-    ; Passer à la rangée suivante
-    mov cx, ent_printi
-    inc cx
-    cmp cx, 10
-    jle outer_loop
+    ret_print_row:                     
 
-    ; Imprimer les numéros de colonnes
-    mov cx, 1
-print_column:
-    mov ax, cx
-    call print_decimal
-    lea dx, v
-    call puts
-    inc cx
-    cmp cx, 11
-    jl print_column
+                                       lea    dx, newline
+                                       call   puts
 
-    jmp doneafficher
+                                       lea    dx, newline
+                                       call   puts
 
-print_row:
-    ; Imprimer le numéro de rangée
-    mov ax, ent_printi
-    call print_decimal
-    jmp ret_print_row
+                                       mov    cx, ent_printi
+                                       inc    cx
+                                       cmp    cx, 10
+                                       jle    outer_loop
 
-doneafficher:
-    ; Restaurer les valeurs des registres depuis la pile
-    pop bp
-    pop dx
-    pop cx
-    pop bx
-    pop ax
-    ret
+                                       mov    cx, 1
+    print_column:                      
+                                       mov    ax, cx
+                                       call   print_decimal
+                                       lea    dx, v
+                                       call   puts
+                                       inc    cx
+                                       cmp    cx, 11
+                                       jl     print_column
+
+
+                                       jmp    doneafficher
+
+
+    print_row:                         
+                                       mov    ax, ent_printi
+                                       call   print_decimal
+                                       jmp    ret_print_row
+
+
+
+
+    doneafficher:                      
+
+                                       pop    bp
+                                       pop    dx
+                                       pop    cx
+                                       pop    bx
+                                       pop    ax
+                                       ret
 AfficherDamier endp
 
 verifqueens proc
-    ; Sauvegarder les valeurs des registres sur la pile
-    push ax
-    push bx
-    push cx
-    push dx
-    push bp
-    mov bp, sp
-
-    ; Initialiser les variables
-    mov found, 0    ; found = 0 (aucune dame trouvée)
-    mov k, 1        ; k = 1 (indice de départ dans ent_verifqueens_testtable)
-    mov p, 0        ; p = 0 (indice de départ dans ent_verifqueens_testtable)
-
-loop1verifqueens:
-    mov cx, k
-    cmp cx, 50
-    jge loop1_endverifqueens  ; Sortir de la boucle si k >= 50
-
-    mov si, 0
-loop2verifqueens:
-    mov ax, ent_verifqueens_testtable[si]
-    cmp ax, -1
-    je loop2_endverifqueens   ; Sortir de la boucle interne si la fin du tableau est atteinte
-
-    ; Obtenir le numéro de case à partir des coordonnées (i, j)
-    push si
-    mov ax, ent_verifqueens_i
-    mov ent_squarenumberi, ax
-    mov ax, ent_verifqueens_j
-    mov ent_squarenumberj, ax
-    call getSquareNumber
-    mov ax, sort_getSquareNumber
-    mov si, p
-    cmp ax, ent_verifqueens_testtable[si]
-    pop si
-
-    jne skipverifqueens       ; Sauter si les numéros de case ne correspondent pas
-
-    ; Obtenir le numéro de case à partir des coordonnées (x, y)
-    push si
-    mov ax, ent_verifqueens_x
-    mov ent_squarenumberi, ax
-    mov ax, ent_verifqueens_y
-    mov ent_squarenumberj, ax
-    call getSquareNumber
-    mov ax, sort_getSquareNumber
-    mov si, k
-    cmp ax, ent_verifqueens_testtable[si]
-    pop si
-
-    jne skipverifqueens       ; Sauter si les numéros de case ne correspondent pas
-
-    ; Une dame a été trouvée
-    mov cx, found
-    mov cx, 1
-    mov found, cx
-    jmp loop1_endverifqueens
-
-skipverifqueens:
-    inc si
-    jmp loop2verifqueens
-
-loop2_endverifqueens:
-    mov cx, k
-    inc cx
-    mov k, cx
-    push si
-    mov si, k
-    cmp ent_verifqueens_testtable[si], 0
-    pop si
-    je loop1verifqueens       ; Continuer la boucle externe si la fin du tableau n'est pas atteinte
-    mov cx, k
-    mov dx, p
-    add dx, cx
-    mov p, dx
-    inc cx
-    mov k, cx
-    jmp loop1verifqueens
-
-loop1_endverifqueens:
-    mov cx, found
-    cmp found, cx
-    jne endverifqueens        ; Sauter à endverifqueens si aucune dame n'a été trouvée
-
+                                       push   ax
+                                       push   bx
+                                       push   cx
+                                       push   dx
+                                       push   bp
+                                       mov    bp, sp
+                                       mov    found, 0
+                                       mov    k, 1
+                                       mov    p, 0
+    
+    loop1verifqueens:                  
+                                       mov    cx,k
+                                       cmp    cx, 50
+                                       jge    loop1_endverifqueens
+        
+                                       mov    si, 0
+    loop2verifqueens:                  
+                                       mov    ax, ent_verifqueens_testtable[si]
+                                       cmp    ax, -1
+                                       je     loop2_endverifqueens
+            
+                                       push   si
+                                       GET_SQUARE_NUMBER ent_verifqueens_i, ent_verifqueens_j
+                                       mov    ax,sort_getSquareNumber
+                                       mov    si,p
+                                       cmp    ax, ent_verifqueens_testtable[si]
+                                       pop    si
+            
+                                       jne    skipverifqueens
+            
+                                       push   si
+                                       GET_SQUARE_NUMBER ent_verifqueens_x, ent_verifqueens_y
+                                       mov    ax,sort_getSquareNumber
+                                       mov    si,k
+                                       cmp    ax, ent_verifqueens_testtable[si]
+                                       pop    si
+            
+                                       jne    skipverifqueens
+                                       mov    cx,found
+                                       mov    cx, 1
+                                       mov    found ,cx
+                                       jmp    loop1_endverifqueens
+            
+    skipverifqueens:                   
+                                       inc    si
+                                       jmp    loop2verifqueens
+    loop2_endverifqueens:              
+                                       mov    cx,k
+                                       inc    cx
+                                       mov    k,cx
+                                       push si
+                                       mov si,k
+                                       cmp    ent_verifqueens_testtable[si], 0
+                                       pop si
+                                       je     loop1verifqueens
+                                       mov    cx,k
+                                       mov    dx,p
+                                       add    dx,cx
+                                       mov    p,dx
+                                       inc    cx
+                                       mov    k,cx
+                                       jmp    loop1verifqueens
+    loop1_endverifqueens:              
+                                       mov    cx,found
+                                       cmp    found, cx
+                                       jne    endverifqueens
+    
     ; Afficher "Vous devez capturer un pion adverse avec votre dame."
-    lea dx, msg
-    call puts
-    mov sort_verifqueens, 1   ; Indique qu'une dame a été trouvée
-    jmp exitverifqueens
-
-endverifqueens:
-    mov sort_verifqueens, 0   ; Indique qu'aucune dame n'a été trouvée
-
-exitverifqueens:
-    ; Restaurer les valeurs des registres depuis la pile
-    pop bp
-    pop dx
-    pop cx
-    pop bx
-    pop ax
-    ret
+                                       lea    dx, msg
+                                       call   puts
+                                       mov    sort_verifqueens, 1
+                                       jmp    exitverifqueens
+    
+    endverifqueens:                    
+                                       mov    sort_verifqueens, 0
+    
+    exitverifqueens:                   
+                                       pop    bp
+                                       pop    dx
+                                       pop    cx
+                                       pop    bx
+                                       pop    ax
+                                       ret
 verifqueens endp
 
 Mustcapture proc
@@ -926,15 +830,14 @@ Mustcapture proc
     ; Calcul des coordonnées i et j de la case courante
                                        push   bx
                                        inc    bx
-                                       mov    N, bx
 
-                                       call   getRow
+                                       GET_ROW bx
+
+
+                                       GET_COLUMN bx
 
                                        mov    ax, sort_getRow
                                        mov    i,ax
-
-                                       call   getColumn
-
                                        mov    ax, sort_getColumn
                                        mov    j,ax
                                        pop    bx
@@ -984,14 +887,12 @@ Mustcapture proc
                                        mov    dx, j
 
                                        dec    dx
-                                       mov    ent_squarenumberj, dx
 
                                        mov    cx, i
 
                                        dec    cx
-                                       mov    ent_squarenumberi, cx
 
-                                       call   getSquareNumber
+                                       GET_SQUARE_NUMBER cx, dx
                                        mov    bx ,sort_getSquareNumber
                                        dec    bx
                                       
@@ -1010,14 +911,12 @@ Mustcapture proc
                                        mov    dx, j
 
                                        sub    dx, 2
-                                       mov    ent_squarenumberj, dx
 
                                        mov    cx, i
 
                                        sub    cx, 2
-                                       mov    ent_squarenumberi, cx
 
-                                       call   getSquareNumber
+                                       GET_SQUARE_NUMBER cx, dx
                                        mov    bx,sort_getSquareNumber
                                        dec    bx
                                        cmp    board[bx], EMPTY
@@ -1030,26 +929,22 @@ Mustcapture proc
                                        mov    si, q
 
                                        mov    dx, j
-                                       mov    ent_squarenumberj, dx
 
                                        mov    cx, i
-                                       mov    ent_squarenumberi, cx
 
-                                       call   getSquareNumber
+                                        GET_SQUARE_NUMBER cx, dx
                                        mov    ax,sort_getSquareNumber
                                        mov    coor[si], ax
                                        inc    si
                                        mov    dx, j
 
                                        sub    dx, 2
-                                       mov    ent_squarenumberj, dx
 
                                        mov    cx, i
 
                                        sub    cx, 2
-                                       mov    ent_squarenumberi, cx
 
-                                       call   getSquareNumber
+                                       GET_SQUARE_NUMBER cx, dx
                                        mov    ax,sort_getSquareNumber
                                        mov    coor[si], ax
 
@@ -1079,13 +974,11 @@ Mustcapture proc
                                        mov    dx, j
 
                                        inc    dx
-                                       mov    ent_squarenumberj, dx
                                        mov    cx, i
 
                                        dec    cx
-                                       mov    ent_squarenumberi,cx
 
-                                       call   getSquareNumber
+                                       GET_SQUARE_NUMBER cx, dx
                                        mov    bx,sort_getSquareNumber
                                        dec    bx
                                     
@@ -1103,12 +996,11 @@ Mustcapture proc
                                        mov    dx, j
 
                                        add    dx, 2
-                                       mov    ent_squarenumberj,dx
                                        mov    cx, i
 
                                        sub    cx, 2
-                                       mov    ent_squarenumberi,cx
-                                       call   getSquareNumber
+
+                                       GET_SQUARE_NUMBER cx, dx
                                        mov    bx , sort_getSquareNumber
                                        dec    bx
                                        cmp    board[bx], EMPTY
@@ -1121,24 +1013,22 @@ Mustcapture proc
 
                                        mov    si, q
                                        mov    dx, j
-                                       mov    ent_squarenumberj, dx
 
                                        mov    cx, i
-                                       mov    ent_squarenumberi, cx
 
-                                       call   getSquareNumber
+                                       GET_SQUARE_NUMBER cx, dx
                                        mov    ax,sort_getSquareNumber
                                        mov    coor[si], ax
                                        inc    si
                                        mov    dx, j
 
                                        add    dx, 2
-                                       mov    ent_squarenumberj,dx
+
                                        mov    cx, i
 
                                        sub    cx, 2
-                                       mov    ent_squarenumberi,cx
-                                       call   getSquareNumber
+                                       
+                                       GET_SQUARE_NUMBER cx, dx
                                        mov    ax,sort_getSquareNumber
                                        mov    coor[si], ax
 
@@ -1176,12 +1066,11 @@ Mustcapture proc
 
                                        dec    dx
 
-                                       mov    ent_squarenumberj, dx
                                        mov    cx, i
 
                                        inc    cx
-                                       mov    ent_squarenumberi, cx
-                                       call   getSquareNumber
+
+                                       GET_SQUARE_NUMBER cx, dx
                                        mov    bx,sort_getSquareNumber
                                        dec    bx
                                       
@@ -1199,12 +1088,12 @@ Mustcapture proc
                                        mov    dx, j
 
                                        sub    dx, 2
-                                       mov    ent_squarenumberj, dx
+
                                        mov    cx, i
 
                                        add    cx, 2
-                                       mov    ent_squarenumberi,cx
-                                       call   getSquareNumber
+                                       
+                                       GET_SQUARE_NUMBER cx, dx
                                        mov    bx , sort_getSquareNumber
                                        dec    bx
                                        cmp    board[bx], EMPTY
@@ -1217,24 +1106,21 @@ Mustcapture proc
                                        mov    si, q
 
                                        mov    dx, j
-                                       mov    ent_squarenumberj, dx
 
                                        mov    cx, i
-                                       mov    ent_squarenumberi, cx
 
-                                       call   getSquareNumber
+
+                                       GET_SQUARE_NUMBER cx, dx
                                        mov    ax,sort_getSquareNumber
                                        mov    coor[si], ax
                                        inc    si
                                        mov    dx, j
 
                                        sub    dx, 2
-                                       mov    ent_squarenumberj, dx
                                        mov    cx, i
 
                                        add    cx, 2
-                                       mov    ent_squarenumberi,cx
-                                       call   getSquareNumber
+                                       GET_SQUARE_NUMBER cx, dx
                                        mov    ax , sort_getSquareNumber
                                        mov    coor[si], ax
                                        inc    si
@@ -1264,12 +1150,12 @@ Mustcapture proc
                                        mov    dx, j
 
                                        inc    dx
-                                       mov    ent_squarenumberj, dx
+
                                        mov    cx, i
 
                                        inc    cx
-                                       mov    ent_squarenumberi, cx
-                                       call   getSquareNumber
+
+                                       GET_SQUARE_NUMBER cx, dx
                                        mov    bx,sort_getSquareNumber
                                        dec    bx
                                      
@@ -1289,12 +1175,12 @@ Mustcapture proc
                                        mov    dx, j
 
                                        add    dx, 2
-                                       mov    ent_squarenumberj, dx
+
                                        mov    cx, i
 
                                        add    cx, 2
-                                       mov    ent_squarenumberi, cx
-                                       call   getSquareNumber
+
+                                       GET_SQUARE_NUMBER cx, dx
                                        mov    bx,sort_getSquareNumber
                                        dec    bx
                                        cmp    board[bx], EMPTY
@@ -1306,24 +1192,22 @@ Mustcapture proc
     ; Capture possible en bas à droite
                                        mov    si, q
                                        mov    dx, j
-                                       mov    ent_squarenumberj, dx
+
 
                                        mov    cx, i
-                                       mov    ent_squarenumberi, cx
 
-                                       call   getSquareNumber
+
+                                       GET_SQUARE_NUMBER cx, dx
                                        mov    ax,sort_getSquareNumber
                                        mov    coor[si], ax
                                        inc    si
                                        mov    dx, j
 
                                        add    dx, 2
-                                       mov    ent_squarenumberj, dx
                                        mov    cx, i
 
                                        add    cx, 2
-                                       mov    ent_squarenumberi, cx
-                                       call   getSquareNumber
+                                       GET_SQUARE_NUMBER cx, dx
 
                                        mov    ax,sort_getSquareNumber
                                        mov    coor[si], ax
@@ -1385,9 +1269,8 @@ Mustcapture proc
 
                                        jl     exit_top_left_loop
 
-                                       mov    ent_squarenumberi, dx
-                                       mov    ent_squarenumberj, bx
-                                       call   getSquareNumber
+
+                                       GET_SQUARE_NUMBER dx, bx
                                        mov    bx,sort_getSquareNumber
                                        dec    bx
                                       
@@ -1435,9 +1318,8 @@ Mustcapture proc
                                        jl     exit_top_left_loop
 
   
-                                       mov    ent_squarenumberi, dx
-                                       mov    ent_squarenumberj, bx
-                                       call   getSquareNumber
+
+                                       GET_SQUARE_NUMBER dx, bx
                                        mov    bx , sort_getSquareNumber
                                        dec    bx
                                        cmp    board[bx], EMPTY
@@ -1451,9 +1333,8 @@ Mustcapture proc
                                        mov    si , qatole
                                        mov    dx,i
                                        mov    bx,j
-                                       mov    ent_squarenumberi,dx
-                                       mov    ent_squarenumberj,bx
-                                       call   getSquareNumber
+
+                                       GET_SQUARE_NUMBER dx, bx
                                        mov    ax,sort_getSquareNumber
                                        mov    queencapturesqtole[si],ax
                                        inc    si
@@ -1489,9 +1370,8 @@ Mustcapture proc
                                        jle    end_additional_top_left_jumps
 
   
-                                       mov    ent_squarenumberi, dx
-                                       mov    ent_squarenumberj, bx
-                                       call   getSquareNumber
+
+                                       GET_SQUARE_NUMBER dx, bx
                                        mov    bx,sort_getSquareNumber
                                        dec    bx
                                        cmp    board[bx], EMPTY
@@ -1509,9 +1389,8 @@ Mustcapture proc
 
                                        sub    dx,cx
                                        sub    bx,cx
-                                       mov    ent_squarenumberi, dx
-                                       mov    ent_squarenumberj, bx
-                                       call   getSquareNumber
+
+                                       GET_SQUARE_NUMBER dx, bx
                                        mov    ax,sort_getSquareNumber
                                        mov    queencapturesqtole[si],ax
 
@@ -1575,9 +1454,8 @@ Mustcapture proc
                                        jg     exit_top_right_loop
 
   
-                                       mov    ent_squarenumberi, dx
-                                       mov    ent_squarenumberj, bx
-                                       call   getSquareNumber
+
+                                       GET_SQUARE_NUMBER dx, bx
                                        mov    bx,sort_getSquareNumber
                                        dec    bx
                                      
@@ -1625,10 +1503,8 @@ Mustcapture proc
 
                                        jg     exit_top_right_loop
 
-                                       mov    ent_squarenumberi, dx
-                                       mov    ent_squarenumberj, bx
 
-                                       call   getSquareNumber
+                                       GET_SQUARE_NUMBER dx, bx
                                        mov    bx,sort_getSquareNumber
                                        dec    bx
                                        cmp    board[bx], EMPTY
@@ -1641,9 +1517,8 @@ Mustcapture proc
                                        mov    si , qatori
                                        mov    dx,i
                                        mov    bx,j
-                                       mov    ent_squarenumberi,dx
-                                       mov    ent_squarenumberj,bx
-                                       call   getSquareNumber
+
+                                       GET_SQUARE_NUMBER dx, bx
                                        mov    ax,sort_getSquareNumber
                                        mov    queencapturesqtori[si],ax
                                        inc    si
@@ -1679,10 +1554,8 @@ Mustcapture proc
 
                                        jge    end_additional_top_right_jumps
 
-                                       mov    ent_squarenumberi, dx
-                                       mov    ent_squarenumberj, bx
 
-                                       call   getSquareNumber
+                                       GET_SQUARE_NUMBER dx, bx
                                        mov    bx,sort_getSquareNumber
                                        dec    bx
                                        cmp    board[bx], EMPTY
@@ -1701,9 +1574,8 @@ Mustcapture proc
 
                                        sub    dx,cx
                                        add    bx,cx
-                                       mov    ent_squarenumberi, dx
-                                       mov    ent_squarenumberj, bx
-                                       call   getSquareNumber
+
+                                       GET_SQUARE_NUMBER dx, bx
                                        mov    ax,sort_getSquareNumber
                                        mov    queencapturesqtori[si],ax
 
@@ -1770,9 +1642,8 @@ Mustcapture proc
                                        jl     exit_bottom_left_loop
 
   
-                                       mov    ent_squarenumberi, dx
-                                       mov    ent_squarenumberj, bx
-                                       call   getSquareNumber
+
+                                       GET_SQUARE_NUMBER dx, bx
                                        mov    bx,sort_getSquareNumber
                                        dec    bx
                                  
@@ -1825,9 +1696,8 @@ Mustcapture proc
                                        jl     exit_bottom_left_loop
 
   
-                                       mov    ent_squarenumberi, dx
-                                       mov    ent_squarenumberj, bx
-                                       call   getSquareNumber
+
+                                       GET_SQUARE_NUMBER dx, bx
                                        mov    bx,sort_getSquareNumber
                                        dec    bx
                                        cmp    board[bx], EMPTY
@@ -1840,9 +1710,8 @@ Mustcapture proc
                                        mov    si , qabole
                                        mov    dx,i
                                        mov    bx,j
-                                       mov    ent_squarenumberi,dx
-                                       mov    ent_squarenumberj,bx
-                                       call   getSquareNumber
+
+                                       GET_SQUARE_NUMBER dx, bx
                                        mov    ax,sort_getSquareNumber
                                        mov    queencapturesqubole[si],ax
                                        inc    si
@@ -1876,10 +1745,8 @@ Mustcapture proc
 
                                        jle    end_additional_bottom_left_jumps
 
-                                       mov    ent_squarenumberi, dx
-                                       mov    ent_squarenumberj, bx
 
-                                       call   getSquareNumber
+                                       GET_SQUARE_NUMBER dx, bx
                                        mov    bx,sort_getSquareNumber
                                        dec    bx
                                        cmp    board[bx], EMPTY
@@ -1898,9 +1765,8 @@ Mustcapture proc
 
                                        add    dx,cx
                                        sub    bx,cx
-                                       mov    ent_squarenumberi, dx
-                                       mov    ent_squarenumberj, bx
-                                       call   getSquareNumber
+
+                                       GET_SQUARE_NUMBER dx, bx
                                        mov    ax,sort_getSquareNumber
                                        mov    queencapturesqubole[si],ax
 
@@ -1967,10 +1833,9 @@ Mustcapture proc
 
                                        jg     exit_bottom_right_loop
 
-                                       mov    ent_squarenumberi, dx
-                                       mov    ent_squarenumberj, bx
 
-                                       call   getSquareNumber
+
+                                       GET_SQUARE_NUMBER dx, bx
                                        mov    bx,sort_getSquareNumber
                                        dec    bx
                                    
@@ -2022,10 +1887,8 @@ Mustcapture proc
 
                                        jg     exit_bottom_right_loop
 
-                                       mov    ent_squarenumberi, dx
-                                       mov    ent_squarenumberj, bx
 
-                                       call   getSquareNumber
+                                       GET_SQUARE_NUMBER dx, bx
                                        mov    bx,sort_getSquareNumber
                                        dec    bx
                                        cmp    board[bx], EMPTY
@@ -2038,9 +1901,8 @@ Mustcapture proc
                                        mov    si , qabori
                                        mov    dx,i
                                        mov    bx,j
-                                       mov    ent_squarenumberi,dx
-                                       mov    ent_squarenumberj,bx
-                                       call   getSquareNumber
+
+                                       GET_SQUARE_NUMBER dx, bx
                                        mov    ax,sort_getSquareNumber
                                        mov    queencapturesqubori[si],ax
                                        inc    si
@@ -2076,10 +1938,9 @@ Mustcapture proc
 
                                        jge    end_additional_bottom_right_jumps
 
-                                       mov    ent_squarenumberi, dx
-                                       mov    ent_squarenumberj, bx
 
-                                       call   getSquareNumber
+
+                                       GET_SQUARE_NUMBER dx, bx
                                        mov    bx,sort_getSquareNumber
                                        dec    bx
                                        cmp    board[bx], EMPTY
@@ -2096,9 +1957,8 @@ Mustcapture proc
                                        add    bx,cxx
                                        add    dx,cx
                                        add    bx,cx
-                                       mov    ent_squarenumberi, dx
-                                       mov    ent_squarenumberj, bx
-                                       call   getSquareNumber
+
+                                       GET_SQUARE_NUMBER dx, bx
                                        mov    ax,sort_getSquareNumber
                                        mov    queencapturesqubori[si], ax
 
@@ -2270,13 +2130,8 @@ Mustcaptureaftercapture proc
 
     ; Calcul des coordonnées i et j de la case courante
 
-                                       mov    ax, ent_Mustcaptureaftercapturei
-                                       mov    ent_squarenumberi,ax
 
-                                       mov    ax,ent_Mustcaptureaftercapturej
-                                       mov    ent_squarenumberj,ax
-
-                                       call   getSquareNumber
+                                       GET_SQUARE_NUMBER ent_Mustcaptureaftercapturei, ent_Mustcaptureaftercapturej
 
                                        mov    bx,sort_getSquareNumber
                                        dec    bx
@@ -2335,14 +2190,13 @@ Mustcaptureaftercapture proc
                                        mov    dx, ent_Mustcaptureaftercapturej
 
                                        dec    dx
-                                       mov    ent_squarenumberj, dx
 
                                        mov    cx, ent_Mustcaptureaftercapturei
 
                                        dec    cx
-                                       mov    ent_squarenumberi, cx
 
-                                       call   getSquareNumber
+
+                                       GET_SQUARE_NUMBER cx, dx
                                        mov    bx ,sort_getSquareNumber
                                        dec    bx
                                       
@@ -2361,14 +2215,12 @@ Mustcaptureaftercapture proc
                                        mov    dx, ent_Mustcaptureaftercapturej
 
                                        sub    dx, 2
-                                       mov    ent_squarenumberj, dx
 
                                        mov    cx, ent_Mustcaptureaftercapturei
 
                                        sub    cx, 2
-                                       mov    ent_squarenumberi, cx
 
-                                       call   getSquareNumber
+                                       GET_SQUARE_NUMBER cx, dx
                                        mov    bx,sort_getSquareNumber
                                        dec    bx
                                        cmp    board[bx], EMPTY
@@ -2380,27 +2232,20 @@ Mustcaptureaftercapture proc
     ; Capture possible en haut à gauche
                                        mov    si, q
 
-                                       mov    dx, ent_Mustcaptureaftercapturej
-                                       mov    ent_squarenumberj, dx
 
-                                       mov    cx, ent_Mustcaptureaftercapturei
-                                       mov    ent_squarenumberi, cx
-
-                                       call   getSquareNumber
+                                       GET_SQUARE_NUMBER ent_Mustcaptureaftercapturei, ent_Mustcaptureaftercapturej
                                        mov    ax,sort_getSquareNumber
                                        mov    coor[si], ax
                                        inc    si
                                        mov    dx, ent_Mustcaptureaftercapturej
 
                                        sub    dx, 2
-                                       mov    ent_squarenumberj, dx
 
                                        mov    cx, ent_Mustcaptureaftercapturei
 
                                        sub    cx, 2
-                                       mov    ent_squarenumberi, cx
 
-                                       call   getSquareNumber
+                                       GET_SQUARE_NUMBER cx, dx
                                        mov    ax,sort_getSquareNumber
                                        mov    coor[si], ax
 
@@ -2430,13 +2275,12 @@ Mustcaptureaftercapture proc
                                        mov    dx, ent_Mustcaptureaftercapturej
 
                                        inc    dx
-                                       mov    ent_squarenumberj, dx
                                        mov    cx, ent_Mustcaptureaftercapturei
 
                                        dec    cx
-                                       mov    ent_squarenumberi,cx
 
-                                       call   getSquareNumber
+
+                                       GET_SQUARE_NUMBER cx, dx
                                        mov    bx,sort_getSquareNumber
                                        dec    bx
                                     
@@ -2454,12 +2298,11 @@ Mustcaptureaftercapture proc
                                        mov    dx, ent_Mustcaptureaftercapturej
 
                                        add    dx, 2
-                                       mov    ent_squarenumberj,dx
                                        mov    cx, ent_Mustcaptureaftercapturei
 
                                        sub    cx, 2
-                                       mov    ent_squarenumberi,cx
-                                       call   getSquareNumber
+
+                                       GET_SQUARE_NUMBER cx, dx
                                        mov    bx , sort_getSquareNumber
                                        dec    bx
                                        cmp    board[bx], EMPTY
@@ -2471,25 +2314,18 @@ Mustcaptureaftercapture proc
     ; Capture possible en haut à droite
 
                                        mov    si, q
-                                       mov    dx, ent_Mustcaptureaftercapturej
-                                       mov    ent_squarenumberj, dx
 
-                                       mov    cx, ent_Mustcaptureaftercapturei
-                                       mov    ent_squarenumberi, cx
-
-                                       call   getSquareNumber
+                                       GET_SQUARE_NUMBER ent_Mustcaptureaftercapturei,ent_Mustcaptureaftercapturej
                                        mov    ax,sort_getSquareNumber
                                        mov    coor[si], ax
                                        inc    si
                                        mov    dx, ent_Mustcaptureaftercapturej
 
                                        add    dx, 2
-                                       mov    ent_squarenumberj,dx
                                        mov    cx, ent_Mustcaptureaftercapturei
 
                                        sub    cx, 2
-                                       mov    ent_squarenumberi,cx
-                                       call   getSquareNumber
+                                       GET_SQUARE_NUMBER cx, dx
                                        mov    ax,sort_getSquareNumber
                                        mov    coor[si], ax
 
@@ -2527,12 +2363,10 @@ Mustcaptureaftercapture proc
 
                                        dec    dx
 
-                                       mov    ent_squarenumberj, dx
                                        mov    cx, ent_Mustcaptureaftercapturei
 
                                        inc    cx
-                                       mov    ent_squarenumberi, cx
-                                       call   getSquareNumber
+                                       GET_SQUARE_NUMBER cx, dx
                                        mov    bx,sort_getSquareNumber
                                        dec    bx
                                       
@@ -2550,12 +2384,11 @@ Mustcaptureaftercapture proc
                                        mov    dx, ent_Mustcaptureaftercapturej
 
                                        sub    dx, 2
-                                       mov    ent_squarenumberj, dx
+
                                        mov    cx, ent_Mustcaptureaftercapturei
 
                                        add    cx, 2
-                                       mov    ent_squarenumberi,cx
-                                       call   getSquareNumber
+                                       GET_SQUARE_NUMBER cx, dx
                                        mov    bx , sort_getSquareNumber
                                        dec    bx
                                        cmp    board[bx], EMPTY
@@ -2567,25 +2400,18 @@ Mustcaptureaftercapture proc
     ; Capture possible en bas à gauche
                                        mov    si, q
 
-                                       mov    dx, ent_Mustcaptureaftercapturej
-                                       mov    ent_squarenumberj, dx
 
-                                       mov    cx, ent_Mustcaptureaftercapturei
-                                       mov    ent_squarenumberi, cx
-
-                                       call   getSquareNumber
+                                       GET_SQUARE_NUMBER ent_Mustcaptureaftercapturei,ent_Mustcaptureaftercapturej
                                        mov    ax,sort_getSquareNumber
                                        mov    coor[si], ax
                                        inc    si
                                        mov    dx, ent_Mustcaptureaftercapturej
 
                                        sub    dx, 2
-                                       mov    ent_squarenumberj, dx
                                        mov    cx, ent_Mustcaptureaftercapturei
 
                                        add    cx, 2
-                                       mov    ent_squarenumberi,cx
-                                       call   getSquareNumber
+                                       GET_SQUARE_NUMBER cx, dx
                                        mov    ax , sort_getSquareNumber
                                        mov    coor[si], ax
                                        inc    si
@@ -2615,12 +2441,11 @@ Mustcaptureaftercapture proc
                                        mov    dx, ent_Mustcaptureaftercapturej
 
                                        inc    dx
-                                       mov    ent_squarenumberj, dx
                                        mov    cx, ent_Mustcaptureaftercapturei
 
                                        inc    cx
-                                       mov    ent_squarenumberi, cx
-                                       call   getSquareNumber
+
+                                       GET_SQUARE_NUMBER cx, dx
                                        mov    bx,sort_getSquareNumber
                                        dec    bx
                                      
@@ -2640,12 +2465,12 @@ Mustcaptureaftercapture proc
                                        mov    dx, ent_Mustcaptureaftercapturej
 
                                        add    dx, 2
-                                       mov    ent_squarenumberj, dx
+
                                        mov    cx, ent_Mustcaptureaftercapturei
 
                                        add    cx, 2
-                                       mov    ent_squarenumberi, cx
-                                       call   getSquareNumber
+
+                                       GET_SQUARE_NUMBER cx, dx
                                        mov    bx,sort_getSquareNumber
                                        dec    bx
                                        cmp    board[bx], EMPTY
@@ -2656,25 +2481,20 @@ Mustcaptureaftercapture proc
 
     ; Capture possible en bas à droite
                                        mov    si, q
-                                       mov    dx, ent_Mustcaptureaftercapturej
-                                       mov    ent_squarenumberj, dx
 
-                                       mov    cx, ent_Mustcaptureaftercapturei
-                                       mov    ent_squarenumberi, cx
-
-                                       call   getSquareNumber
+                                       GET_SQUARE_NUMBER ent_Mustcaptureaftercapturei,ent_Mustcaptureaftercapturej
                                        mov    ax,sort_getSquareNumber
                                        mov    coor[si], ax
                                        inc    si
                                        mov    dx, ent_Mustcaptureaftercapturej
 
                                        add    dx, 2
-                                       mov    ent_squarenumberj, dx
+
                                        mov    cx, ent_Mustcaptureaftercapturei
 
                                        add    cx, 2
-                                       mov    ent_squarenumberi, cx
-                                       call   getSquareNumber
+
+                                       GET_SQUARE_NUMBER cx, dx
 
                                        mov    ax,sort_getSquareNumber
                                        mov    coor[si], ax
@@ -2736,9 +2556,8 @@ Mustcaptureaftercapture proc
 
                                        jl     exit_top_left_loop1
 
-                                       mov    ent_squarenumberi, dx
-                                       mov    ent_squarenumberj, bx
-                                       call   getSquareNumber
+
+                                       GET_SQUARE_NUMBER dx, bx
                                        mov    bx,sort_getSquareNumber
                                        dec    bx
                                       
@@ -2785,10 +2604,8 @@ Mustcaptureaftercapture proc
 
                                        jl     exit_top_left_loop1
 
-  
-                                       mov    ent_squarenumberi, dx
-                                       mov    ent_squarenumberj, bx
-                                       call   getSquareNumber
+
+                                       GET_SQUARE_NUMBER dx, bx
                                        mov    bx , sort_getSquareNumber
                                        dec    bx
                                        cmp    board[bx], EMPTY
@@ -2800,11 +2617,8 @@ Mustcaptureaftercapture proc
     ; Capture possible en haut à gauche
 
                                        mov    si , qatole
-                                       mov    dx, ent_Mustcaptureaftercapturei
-                                       mov    bx, ent_Mustcaptureaftercapturej
-                                       mov    ent_squarenumberi,dx
-                                       mov    ent_squarenumberj,bx
-                                       call   getSquareNumber
+
+                                       GET_SQUARE_NUMBER ent_Mustcaptureaftercapturei,ent_Mustcaptureaftercapturej
                                        mov    ax,sort_getSquareNumber
                                        mov    queencapturesqtole[si],ax
                                        inc    si
@@ -2840,9 +2654,8 @@ Mustcaptureaftercapture proc
                                        jle    end_additional_top_left_jumps1
 
   
-                                       mov    ent_squarenumberi, dx
-                                       mov    ent_squarenumberj, bx
-                                       call   getSquareNumber
+
+                                       GET_SQUARE_NUMBER dx, bx
                                        mov    bx,sort_getSquareNumber
                                        dec    bx
                                        cmp    board[bx], EMPTY
@@ -2860,9 +2673,8 @@ Mustcaptureaftercapture proc
 
                                        sub    dx,cx
                                        sub    bx,cx
-                                       mov    ent_squarenumberi, dx
-                                       mov    ent_squarenumberj, bx
-                                       call   getSquareNumber
+
+                                       GET_SQUARE_NUMBER dx, bx
                                        mov    ax,sort_getSquareNumber
                                        mov    queencapturesqtole[si],ax
 
@@ -2926,9 +2738,7 @@ Mustcaptureaftercapture proc
                                        jg     exit_top_right_loop1
 
   
-                                       mov    ent_squarenumberi, dx
-                                       mov    ent_squarenumberj, bx
-                                       call   getSquareNumber
+                                       GET_SQUARE_NUMBER dx, bx
                                        mov    bx,sort_getSquareNumber
                                        dec    bx
                                      
@@ -2976,10 +2786,8 @@ Mustcaptureaftercapture proc
 
                                        jg     exit_top_right_loop1
 
-                                       mov    ent_squarenumberi, dx
-                                       mov    ent_squarenumberj, bx
 
-                                       call   getSquareNumber
+                                       GET_SQUARE_NUMBER dx, bx
                                        mov    bx,sort_getSquareNumber
                                        dec    bx
                                        cmp    board[bx], EMPTY
@@ -2990,11 +2798,8 @@ Mustcaptureaftercapture proc
 
     ; Capture possible en haut à droite
                                        mov    si , qatori
-                                       mov    dx, ent_Mustcaptureaftercapturei
-                                       mov    bx, ent_Mustcaptureaftercapturej
-                                       mov    ent_squarenumberi,dx
-                                       mov    ent_squarenumberj,bx
-                                       call   getSquareNumber
+
+                                       GET_SQUARE_NUMBER ent_Mustcaptureaftercapturei,ent_Mustcaptureaftercapturej
                                        mov    ax,sort_getSquareNumber
                                        mov    queencapturesqtori[si],ax
                                        inc    si
@@ -3030,10 +2835,8 @@ Mustcaptureaftercapture proc
 
                                        jge    end_additional_top_right_jumps1
 
-                                       mov    ent_squarenumberi, dx
-                                       mov    ent_squarenumberj, bx
 
-                                       call   getSquareNumber
+                                       GET_SQUARE_NUMBER dx, bx
                                        mov    bx,sort_getSquareNumber
                                        dec    bx
                                        cmp    board[bx], EMPTY
@@ -3052,9 +2855,7 @@ Mustcaptureaftercapture proc
 
                                        sub    dx,cx
                                        add    bx,cx
-                                       mov    ent_squarenumberi, dx
-                                       mov    ent_squarenumberj, bx
-                                       call   getSquareNumber
+                                       GET_SQUARE_NUMBER dx, bx
                                        mov    ax,sort_getSquareNumber
                                        mov    queencapturesqtori[si],ax
 
@@ -3120,10 +2921,8 @@ Mustcaptureaftercapture proc
 
                                        jl     exit_bottom_left_loop1
 
-  
-                                       mov    ent_squarenumberi, dx
-                                       mov    ent_squarenumberj, bx
-                                       call   getSquareNumber
+
+                                       GET_SQUARE_NUMBER dx, bx
                                        mov    bx,sort_getSquareNumber
                                        dec    bx
                                  
@@ -3176,9 +2975,7 @@ Mustcaptureaftercapture proc
                                        jl     exit_bottom_left_loop1
 
   
-                                       mov    ent_squarenumberi, dx
-                                       mov    ent_squarenumberj, bx
-                                       call   getSquareNumber
+                                       GET_SQUARE_NUMBER dx, bx
                                        mov    bx,sort_getSquareNumber
                                        dec    bx
                                        cmp    board[bx], EMPTY
@@ -3189,11 +2986,8 @@ Mustcaptureaftercapture proc
 
     ; Capture possible en bas à gauche
                                        mov    si , qabole
-                                       mov    dx, ent_Mustcaptureaftercapturei
-                                       mov    bx, ent_Mustcaptureaftercapturej
-                                       mov    ent_squarenumberi,dx
-                                       mov    ent_squarenumberj,bx
-                                       call   getSquareNumber
+
+                                       GET_SQUARE_NUMBER ent_Mustcaptureaftercapturei,ent_Mustcaptureaftercapturej
                                        mov    ax,sort_getSquareNumber
                                        mov    queencapturesqubole[si],ax
                                        inc    si
@@ -3227,10 +3021,8 @@ Mustcaptureaftercapture proc
 
                                        jle    end_additional_bottom_left_jumps1
 
-                                       mov    ent_squarenumberi, dx
-                                       mov    ent_squarenumberj, bx
 
-                                       call   getSquareNumber
+                                       GET_SQUARE_NUMBER dx, bx
                                        mov    bx,sort_getSquareNumber
                                        dec    bx
                                        cmp    board[bx], EMPTY
@@ -3249,9 +3041,8 @@ Mustcaptureaftercapture proc
 
                                        add    dx,cx
                                        sub    bx,cx
-                                       mov    ent_squarenumberi, dx
-                                       mov    ent_squarenumberj, bx
-                                       call   getSquareNumber
+
+                                       GET_SQUARE_NUMBER dx, bx
                                        mov    ax,sort_getSquareNumber
                                        mov    queencapturesqubole[si],ax
 
@@ -3318,10 +3109,8 @@ Mustcaptureaftercapture proc
 
                                        jg     exit_bottom_right_loop1
 
-                                       mov    ent_squarenumberi, dx
-                                       mov    ent_squarenumberj, bx
 
-                                       call   getSquareNumber
+                                       GET_SQUARE_NUMBER dx, bx
                                        mov    bx,sort_getSquareNumber
                                        dec    bx
                                    
@@ -3373,10 +3162,8 @@ Mustcaptureaftercapture proc
 
                                        jg     exit_bottom_right_loop1
 
-                                       mov    ent_squarenumberi, dx
-                                       mov    ent_squarenumberj, bx
 
-                                       call   getSquareNumber
+                                       GET_SQUARE_NUMBER dx, bx
                                        mov    bx,sort_getSquareNumber
                                        dec    bx
                                        cmp    board[bx], EMPTY
@@ -3387,11 +3174,8 @@ Mustcaptureaftercapture proc
 
     ; Capture possible en bas à droite
                                        mov    si , qabori
-                                       mov    dx, ent_Mustcaptureaftercapturei
-                                       mov    bx, ent_Mustcaptureaftercapturej
-                                       mov    ent_squarenumberi,dx
-                                       mov    ent_squarenumberj,bx
-                                       call   getSquareNumber
+
+                                       GET_SQUARE_NUMBER ent_Mustcaptureaftercapturei,ent_Mustcaptureaftercapturej
                                        mov    ax,sort_getSquareNumber
                                        mov    queencapturesqubori[si],ax
                                        inc    si
@@ -3427,10 +3211,8 @@ Mustcaptureaftercapture proc
 
                                        jge    end_additional_bottom_right_jumps1
 
-                                       mov    ent_squarenumberi, dx
-                                       mov    ent_squarenumberj, bx
 
-                                       call   getSquareNumber
+                                       GET_SQUARE_NUMBER dx, bx
                                        mov    bx,sort_getSquareNumber
                                        dec    bx
                                        cmp    board[bx], EMPTY
@@ -3447,9 +3229,8 @@ Mustcaptureaftercapture proc
                                        add    bx,cxx
                                        add    dx,cx
                                        add    bx,cx
-                                       mov    ent_squarenumberi, dx
-                                       mov    ent_squarenumberj, bx
-                                       call   getSquareNumber
+
+                                       GET_SQUARE_NUMBER dx, bx
                                        mov    ax,sort_getSquareNumber
                                        mov    queencapturesqubori[si], ax
 
@@ -3521,6 +3302,8 @@ Mustcaptureaftercapture proc
                                        ret
 
 Mustcaptureaftercapture endp
+
+
 
 
 puts proc    near
@@ -3641,3 +3424,88 @@ print_decimal endp
 
 CODE ENDS
 END
+
+
+generateAIMove PROC
+
+    ; Check if a capture must be made
+    call mustcapture
+    cmp ax, 1
+    jne no_capture_required
+
+    ; Must capture
+    ; Fetch coordinates for the capture move
+    mov si, 0
+    mov N,coor[si]
+    call getRow
+    push ax        ; Save i
+    call getColumn
+    push ax        ; Save j
+    inc si
+    mov N,coor[si]
+    call getRow
+    push ax        ; Save x
+    call getColumn
+    push ax        ; Save y
+
+    ; Move piece
+    pop dx         ; y
+    pop cx         ; x
+    pop bx         ; j
+    pop ax         ; i
+    call deplacer
+    jmp end_generateAIMove
+
+no_capture_required:
+
+    ; Initialize validMove to 0
+    mov validMove, 0
+
+    ; Outer loop
+outer_loop:
+    cmp validMove, 1
+    je valid_move_found
+
+    ; Iterate over the board
+    mov cx, 0      ; k = 0
+iterate_board:
+    cmp cx, 50
+    jge outer_loop_end
+
+    ; Check if the piece is a BLACK_PAWN or BLACK_QUEEN
+    mov bx, board[cx]
+    cmp bx, BLACK_PAWN
+    je check_black_pawn
+    cmp bx, BLACK_QUEEN
+    je check_black_queen
+
+    jmp next_iteration
+
+check_black_queen:
+    ; Handle BLACK_QUEEN moves
+    call getRow
+    push ax        ; Save i
+    call getColumn
+    push ax        ; Save j
+
+    ; Diagonal moves for the BLACK_QUEEN
+    ; (i + m, j + m)
+    mov bx, 1
+check_queen_move1:
+    cmp bx, 10
+    jge break_move1
+    ; Check if (i + bx > 10 || j + bx > 10)
+    add ax, bx
+    cmp ax, 10
+    ja break_move1
+    add ax, bx
+    cmp ax, 10
+    ja break_move1
+    ; Check if square is EMPTY
+    call getSquareNumber
+    mov di,
+
+
+
+
+generateAIMove endp
