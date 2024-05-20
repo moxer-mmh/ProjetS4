@@ -1,0 +1,844 @@
+verif proc
+    ; Calcul de currentPlayer
+                                       push          ax
+                                       mov           al, player
+                                       cmp           al, WHITE
+                                       jne           black_player
+                                       mov           currentPlayer, WHITE_PAWN
+                                       mov           currentQueen, WHITE_QUEEN
+                                       jmp           opponent
+                                       pop           ax
+black_player:
+                                       mov           currentPlayer, BLACK_PAWN
+                                       mov           currentQueen, BLACK_QUEEN
+opponent:
+                                       push          ax
+                                       mov           al, player
+                                       cmp           al, WHITE
+                                       jne           white_opponent
+                                       mov           opponentPiece, BLACK_PAWN
+                                       mov           opponentQueen, BLACK_QUEEN
+                                       jmp           start_square
+                                       pop           ax
+white_opponent:
+                                       mov           opponentPiece, WHITE_PAWN
+                                       mov           opponentQueen, WHITE_QUEEN
+		
+start_square:
+    ; Calcul de startSquareNumber
+                                       mov           ax , ent_verifi
+                                       mov           ent_Squarenumberi , ax
+                                       mov           ax , ent_verifj
+                                       mov           ent_Squarenumberj , ax
+                                       call          getSquareNumber
+                                       push          ax
+                                       mov           ax , sort_getsquarenumber
+                                       mov           startSquareNumber, ax
+                                       pop           ax
+    ; Calcul de endSquareNumber
+                                       mov           ax , ent_verifx
+                                       mov           ent_Squarenumberi , ax
+                                       mov           ax , ent_verify
+                                       mov           ent_Squarenumberj , ax
+                                       call          getSquareNumber
+                                       push          ax
+                                       mov           ax , sort_getsquarenumber
+                                       mov           endSquareNumber , ax
+                                       pop           ax
+		
+    ; Vérification de captureaftercapture
+                                       mov           si ,0
+                                       cmp           captureaftercapture[si], 0
+                                       je            check_must_capture1
+                                       cmp           captureaftercapture[si+2], 0
+                                       je            check_must_capture1
+    ; Vérification de currentPlayer
+                                       mov           ax , captureaftercapture[si]
+                                       mov           ent_squarestatei , ax
+                                       mov           ax , captureaftercapture[si+2]
+                                       mov           ent_squarestatej , ax
+		
+                                       call          getSquareState
+                                       mov           ax, Sort_getSquareState
+                                       cmp           al, currentPlayer
+
+                                       jne           check_current_queen
+
+    ; Vérification des coordonnées
+    veriiif1:                          
+                                       mov           ax,N
+                                       mov           ax , coor[si]
+                                       call          getRow
+                                       push          ax
+                                       mov           ax , sort_getRow
+                                       cmp           ent_verifi , ax
+                                       je            veriiif2
+                                       pop           ax
+                                       mov           ax , N
+                                       mov           ax , coor[si]
+                                       call          getColumn
+                                       push          ax
+                                       mov           ax , sort_getColumn
+                                       cmp           ent_verifj , ax
+                                       je            veriiif2
+                                       pop           ax
+     
+                                       mov           ax,N
+                                       mov           ax , coor[si+1]
+                                       call          getRow
+                                       push          ax
+                                       mov           ax , sort_getRow
+                                       cmp           ent_verifx , ax
+                                       je            veriiif2
+                                       pop           ax
+
+                                       mov           N , coor[si+1]
+                                       call          getColumn
+                                       push          ax
+                                       mov           ax , sort_getColumn
+                                       cmp           ent_verify , ax
+                                       je            veriiif2
+                                       pop           ax
+    veriiif2:                          
+                                       mov           N , coor[si+2]
+                                       call          getRow
+                                       push          ax
+                                       mov           ax , sort_getRow
+                                       cmp           ent_verifi , ax
+                                       je            veriiif3
+                                       pop           ax
+                                       mov           N , coor[si+2]
+                                       call          getColumn
+                                       push          ax
+                                       mov           ax , sort_getColumn
+                                       cmp           ent_verifj , ax
+                                       je            veriiif3
+                                       pop           ax
+
+                                       mov           N , coor[si+3]
+                                       call          getRow
+                                       push          ax
+                                       mov           ax , sort_getRow
+                                       cmp           ent_verifx , ax
+                                       je            veriiif3
+                                       pop           ax
+                                       mov           N , coor[si+3]
+                                       call          getColumn
+                                       push          ax
+                                       mov           ax , sort_getColumn
+                                       cmp           ent_verify , ax
+                                       je            veriiif3
+                                       pop           ax
+    veriiif3:                          
+                                       mov           N , coor[si+4]
+                                       call          getRow
+                                       push          ax
+                                       mov           ax , sort_getRow
+                                       cmp           ent_verifi , ax
+                                       je            veriif4
+                                       pop           ax
+                                       mov           N , coor[si+4]
+                                       call          getColumn
+                                       push          ax
+                                       mov           ax , sort_getColumn
+                                       cmp           ent_verifj , ax
+                                       je            veriif4
+                                       pop           ax
+
+                                       mov           N , coor[si+5]
+                                       call          getRow
+                                       push          ax
+                                       mov           ax , sort_getRow
+                                       cmp           ent_verifx , ax
+                                       je            veriif4
+                                       pop           ax
+                                       mov           N , coor[si+5]
+                                       call          getColumn
+                                       push          ax
+                                       mov           ax , sort_getColumn
+                                       cmp           ent_verify , ax
+                                       je            veriif4
+                                       pop           ax
+    veriiif4:                          
+                                       mov           N , coor[si+6]
+                                       call          getRow
+                                       push          ax
+                                       mov           ax , sort_getRow
+                                       cmp           ent_verifi , ax
+                                       je            check_pawn_move
+                                       pop           ax
+                                       mov           N , coor[si+6]
+                                       call          getColumn
+                                       push          ax
+                                       mov           ax , sort_getColumn
+                                       cmp           ent_verifj , ax
+                                       je            check_pawn_move
+                                       pop           ax
+
+                                       mov           N , coor[si+7]
+                                       call          getRow
+                                       push          ax
+                                       mov           ax , sort_getRow
+                                       cmp           ent_verifx , ax
+                                       je            check_pawn_move
+                                       pop           ax
+                                       mov           N , coor[si+7]
+                                       call          getColumn
+                                       push          ax
+                                       mov           ax , sort_getColumn
+                                       cmp           ent_verify , ax
+                                       je            check_pawn_move
+                                       pop           ax
+		
+    bouclek:                           
+                                       cmp           coor[k] , 0
+                                       je            finbouclek
+                                       MOV           AH, 09h
+                                       LEA           DX, msg_capture_adv
+                                       INT           21h
+                                       mov           ax , k
+                                       add           ax , 2
+                                       mov           k , ax
+                                       jmp           bouclek
+
+    finbouclek:                        
+                                       jmp           invalid_move
+
+
+
+check_current_queen:
+
+                                       mov           ax , captureaftercapture[si]
+                                       mov           ent_squaerstatei , ax
+                                       mov           ax , captureaftercapture[si+2]
+                                       mov           ent_squarestatej , ax
+		
+                                       call          getSquareState
+                                       push          ax
+                                       mov           ax , Sort_getSquareState
+                                       cmp           ax, currentQueen
+                                       pop           ax
+                                       jne
+		
+                                       mov           ax , ent_verifi
+                                       mov           ent_verifqueens_i , ax
+                                       mov           ax , ent_verifj
+                                       mov           ent_verifqueens_j  , ax
+                                       mov           ax , ent_verifx
+                                       mov           ent_verifqueens_x , ax
+                                       mov           ax , ent_verify
+                                       mov           ent_verifqueens_y  , ax
+                                       mov           ax , queencapturesqtole
+                                       mov           ent_verifqueens_testtable , ax
+                                       call          verifqueens
+                                       push          ax
+                                       mov           ax , sort_verifqueens
+                                       cmp           ax, 1
+                                       pop           ax
+                                       jne           jump11
+                                       mov           ax , ret
+                                       add           ax , 2
+                                       mov           ret , ax
+jump11 :
+                                       mov           ax , ent_verifi
+                                       mov           ent_verifqueens_i , ax
+                                       mov           ax , ent_verifj
+                                       mov           ent_verifqueens_j  , ax
+                                       mov           ax , ent_verifx
+                                       mov           ent_verifqueens_x , ax
+                                       mov           ax , ent_verify
+                                       mov           ent_verifqueens_y  , ax
+                                       mov           ax , queencapturesqtori
+                                       mov           ent_verifqueens_testtable , ax
+                                       call          verifqueens
+                                       push          ax
+                                       mov           ax , sort_verifqueens
+                                       cmp           ax, 1
+                                       pop           ax
+                                       jne           jump12
+                                       mov           ax , ret
+                                       add           ax , 2
+                                       mov           ret , ax
+jump12 :
+                                       mov           ax , ent_verifi
+                                       mov           ent_verifqueens_i , ax
+                                       mov           ax , ent_verifj
+                                       mov           ent_verifqueens_j  , ax
+                                       mov           ax , ent_verifx
+                                       mov           ent_verifqueens_x , ax
+                                       mov           ax , ent_verify
+                                       mov           ent_verifqueens_y  , ax
+                                       mov           ax , queencapturesqubole
+                                       mov           ent_verifqueens_testtable , ax
+                                       call          verifqueens
+                                       push          ax
+                                       mov           ax , sort_verifqueens
+                                       cmp           ax, 1
+                                       pop           ax
+                                       jne           jump13
+                                       mov           ax , ret
+                                       add           ax , 2
+                                       mov           ret , ax
+jump13 :
+                                       mov           ax , ent_verifi
+                                       mov           ent_verifqueens_i , ax
+                                       mov           ax , ent_verifj
+                                       mov           ent_verifqueens_j  , ax
+                                       mov           ax , ent_verifx
+                                       mov           ent_verifqueens_x , ax
+                                       mov           ax , ent_verify
+                                       mov           ent_verifqueens_y  , ax
+                                       mov           ax , queencapturesqubori
+                                       mov           ent_verifqueens_testtable , ax
+                                       call          verifqueens
+                                       push          ax
+                                       mov           ax , sort_verifqueens
+                                       cmp           ax, 1
+                                       pop           ax
+                                       jne           if3
+                                       mov           ax , ret
+                                       add           ax , 2
+                                       mov           ret , ax
+    if3:                               
+                                       mov           ax , ret
+                                       cmp           ax , 0
+                                       je            check_must_capture1
+                                       jmp           invalid_move
+
+check_must_capture1 :
+                                       call          Mustcapture
+                                       mov           ax , sort_Mustcapture
+                                       cmp           ax , 1
+                                       jne           if2
+                                       mov           ax , ent_verifi
+                                       mov           ent_squarestatei , ax
+                                       mov           ax , ent_verifj
+                                       mov           ent_squarestatej , ax
+                                       call          getSquareState
+                                       push          ax
+                                       mov           ax , Sort_getSquareState
+                                       cmp           ax, currentPlayer
+                                       pop           ax
+                                       jne           currentQueen2
+    ; Vérification des coordonnées
+    veriiif10:                         
+                                       mov           N , coor[si]
+                                       call          getRow
+                                       push          ax
+                                       mov           ax , sort_getRow
+                                       cmp           ent_verifi , ax
+                                       je            veriif11
+                                       pop           ax
+                                       mov           N , coor[si]
+                                       call          getColumn
+                                       push          ax
+                                       mov           ax , sort_getColumn
+                                       cmp           ent_verifj , ax
+                                       je            veriif11
+                                       pop           ax
+
+                                       mov           N , coor[si+1]
+                                       call          getRow
+                                       push          ax
+                                       mov           ax , sort_getRow
+                                       cmp           ent_verifx , ax
+                                       je            veriif11
+                                       pop           ax
+                                       mov           N , coor[si+1]
+                                       call          getColumn
+                                       push          ax
+                                       mov           ax , sort_getColumn
+                                       cmp           ent_verify , ax
+                                       je            veriif11
+                                       pop           ax
+    veriiif11:                         
+                                       mov           N , coor[si+2]
+                                       call          getRow
+                                       push          ax
+                                       mov           ax , sort_getRow
+                                       cmp           ent_verifi , ax
+                                       je            veriif12
+                                       pop           ax
+                                       mov           N , coor[si+2]
+                                       call          getColumn
+                                       push          ax
+                                       mov           ax , sort_getColumn
+                                       cmp           ent_verifj , ax
+                                       je            veriif12
+                                       pop           ax
+
+                                       mov           N , coor[si+3]
+                                       call          getRow
+                                       push          ax
+                                       mov           ax , sort_getRow
+                                       cmp           ent_verifx , ax
+                                       je            veriif12
+                                       pop           ax
+                                       mov           N , coor[si+3]
+                                       call          getColumn
+                                       push          ax
+                                       mov           ax , sort_getColumn
+                                       cmp           ent_verify , ax
+                                       je            veriif12
+                                       pop           ax
+    veriiif12:                         
+                                       mov           N , coor[si+4]
+                                       call          getRow
+                                       push          ax
+                                       mov           ax , sort_getRow
+                                       cmp           ent_verifi , ax
+                                       je            veriif13
+                                       pop           ax
+                                       mov           N , coor[si+4]
+                                       call          getColumn
+                                       push          ax
+                                       mov           ax , sort_getColumn
+                                       cmp           ent_verifj , ax
+                                       je            veriif13
+                                       pop           ax
+
+                                       mov           N , coor[si+5]
+                                       call          getRow
+                                       push          ax
+                                       mov           ax , sort_getRow
+                                       cmp           ent_verifx , ax
+                                       je            veriif13
+                                       pop           ax
+                                       mov           N , coor[si+5]
+                                       call          getColumn
+                                       push          ax
+                                       mov           ax , sort_getColumn
+                                       cmp           ent_verify , ax
+                                       je            veriif13
+                                       pop           ax
+    veriiif14:                         
+                                       mov           N , coor[si+6]
+                                       call          getRow
+                                       push          ax
+                                       mov           ax , sort_getRow
+                                       cmp           ent_verifi , ax
+                                       je            ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+                                       pop           ax
+                                       mov           N , coor[si+6]
+                                       call          getColumn
+                                       push          ax
+                                       mov           ax , sort_getColumn
+                                       cmp           ent_verifj , ax
+                                       je            ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+                                       pop           ax
+
+                                       mov           N , coor[si+7]
+                                       call          getRow
+                                       push          ax
+                                       mov           ax , sort_getRow
+                                       cmp           ent_verifx , ax
+                                       je            ,,,,,,,,,,,,,,,,,,,,,,,,,
+                                       pop           ax
+                                       mov           N , coor[si+7]
+                                       call          getColumn
+                                       push          ax
+                                       mov           ax , sort_getColumn
+                                       cmp           ent_verify , ax
+                                       je            ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+                                       pop           ax
+		
+    bouclek2:                          
+                                       cmp           coor[k2] , 0
+                                       je            finbouclek2
+                                       MOV           AH, 09h
+                                       LEA           DX, msg_capture_adv
+                                       INT           21h
+                                       mov           ax , k
+                                       add           ax , 2
+                                       mov           k , ax
+                                       jmp           bouclek2
+
+    finbouclek2:                       
+                                       mov           ax , rett
+                                       add           ax , 2
+                                       move          rett , ax
+
+check_current_queen2:
+                                       mov           ax , ent_verifi
+                                       mov           ent_squaerstatei , ax
+                                       mov           ax , ent_verifj
+                                       mov           ent_squaerstatej , ax
+                                       call          getSquareState
+                                       push          ax
+                                       mov           ax , Sort_getSquareState
+                                       cmp           ax, currentQueen
+                                       pop           ax
+                                       jne           if2
+		
+                                       mov           ax , jumpsqutole
+                                       cmp           ax, 0
+                                       jle           jump1
+                                       mov           ax , ent_verifi
+                                       mov           ent_verifqueens_i , ax
+                                       mov           ax , ent_verifj
+                                       mov           ent_verifqueens_j  , ax
+                                       mov           ax , ent_verifx
+                                       mov           ent_verifqueens_x , ax
+                                       mov           ax , ent_verify
+                                       mov           ent_verifqueens_y  , ax
+                                       mov           ax , queencapturesqtole
+                                       mov           ent_verifqueens_testtable , ax
+                                       call          verifqueens
+                                       push          ax
+                                       mov           ax , sort_verifqueens
+                                       cmp           ax, 1
+                                       pop           ax
+                                       jne           jump1
+                                       mov           ax , ret
+                                       add           ax , 2
+                                       mov           ret , ax
+jump1 :
+                                       mov           ax , jumpsqutori
+                                       cmp           ax, 0
+                                       jle           jump2
+                                       mov           ax , ent_verifi
+                                       mov           ent_verifqueens_i , ax
+                                       mov           ax , ent_verifj
+                                       mov           ent_verifqueens_j  , ax
+                                       mov           ax , ent_verifx
+                                       mov           ent_verifqueens_x , ax
+                                       mov           ax , ent_verify
+                                       mov           ent_verifqueens_y  , ax
+                                       mov           ax , queencapturesqtori
+                                       mov           ent_verifqueens_testtable , ax
+                                       call          verifqueens
+                                       push          ax
+                                       mov           ax , sort_verifqueens
+                                       cmp           ax, 1
+                                       pop           ax
+                                       jne           jump2
+                                       mov           ax , ret
+                                       add           ax , 2
+                                       mov           ret , ax
+jump2 :
+		
+                                       mov           ax , jumpsqubole
+                                       cmp           ax, 0
+                                       jle           jump3
+                                       mov           ax , ent_verifi
+                                       mov           ent_verifqueens_i , ax
+                                       mov           ax , ent_verifj
+                                       mov           ent_verifqueens_j  , ax
+                                       mov           ax , ent_verifx
+                                       mov           ent_verifqueens_x , ax
+                                       mov           ax , ent_verify
+                                       mov           ent_verifqueens_y  , ax
+                                       mov           ax , queencapturesqubole
+                                       mov           ent_verifqueens_testtable , ax
+                                       call          verifqueens
+                                       push          ax
+                                       mov           ax , sort_verifqueens
+                                       cmp           ax, 1
+                                       pop           ax
+                                       jne           jump3
+                                       mov           ax , ret
+                                       add           ax , 2
+                                       mov           ret , ax
+		
+jump3 :
+		
+                                       mov           ax , jumpsqubori
+                                       cmp           ax, 0
+                                       jle           if2
+                                       mov           ax , ent_verifi
+                                       mov           ent_verifqueens_i , ax
+                                       mov           ax , ent_verifj
+                                       mov           ent_verifqueens_j  , ax
+                                       mov           ax , ent_verifx
+                                       mov           ent_verifqueens_x , ax
+                                       mov           ax , ent_verify
+                                       mov           ent_verifqueens_y  , ax
+                                       mov           ax , queencapturesqubori
+                                       mov           ent_verifqueens_testtable , ax
+                                       call          verifqueens
+                                       push          ax
+                                       mov           ax , sort_verifqueens
+                                       cmp           ax, 1
+                                       pop           ax
+                                       jne           if2
+                                       mov           ax , rett
+                                       add           ax , 2
+                                       mov           ret , ax
+
+
+    if2:                               
+                                       mov           ax , rett
+                                       cmp           ax , 0
+je,,,,,,,,,,,,,,,
+                                       jmp           invalid_move
+
+check_current_player2 :
+                                       mov           ax , ent_verifi
+                                       mov           ent_squaerstatei , ax
+                                       mov           ax , ent_verifj
+                                       mov           ent_squaerstatej , ax
+                                       call          getSquareState
+                                       push          ax
+                                       mov           ax , Sort_getSquareState
+                                       cmp           ax, currentPlayer
+                                       pop           ax
+                                       jne           ////////////////////////////////////////////////////
+                                       call          Mustcapture
+                                       mov           ax , sort_Mustcapture
+                                       cmp           ax , 0
+                                       jne           ////////////////////////////////////////////////
+    ; Calcul de abs(i - x)
+                                       mov           ax,i
+                                       mov           cx,x
+                                       sub           ax, cx                                                  ; ax = i - x
+                                       mov           si, ax                                                  ; si = i - x (pour garder une copie)
+                                       cmp           ax, 0                                                   ; Comparer i - x avec 0
+                                       jge           abs1                                                  ; Si i - x >= 0, sauter à abs1
+                                       neg           ax                                                      ; Sinon, ax = -(i - x)
+abs1:
+                                       cmp           ax, 1                                                   ; Comparer abs(i - x) avec 1
+                                       jg            true                                                  ; Si abs(i - x) > 1, sauter à true
+    ; Calcul de abs(j - y)
+                                       mov           ax, bx                                                  ; ax = j
+                                       sub           ax, dx                                                  ; ax = j - y
+                                       mov           di, ax                                                  ; di = j - y (pour garder une copie)
+                                       cmp           ax, 0                                                   ; Comparer j - y avec 0
+                                       jge           abs2                                                  ; Si j - y >= 0, sauter à abs2
+                                       neg           ax                                                      ; Sinon, ax = -(j - y)
+abs2:
+                                       cmp           ax, 1                                                   ; Comparer abs(j - y) avec 1
+                                       jg            true                                                  ; Si abs(j - y) > 1, sauter à true
+
+    ; Si on arrive ici, les deux conditions sont fausses
+                                       jmp           false                                                 ; Sauter à false
+
+true:
+                                       MOV           AH, 09h
+                                       LEA           DX,msg_invalid_pawn_move db
+                                       INT           21h
+                                       jmp           invalid_move
+
+
+                                       mov           ax , startSquareNumber
+                                       cmp           ax , 0
+                                       je            affichage
+                                       move          ax , endSquareNumber
+                                       cmp           ax , 0
+                                       jne           lll
+		
+			
+    affichage:                         
+                                       MOV           AH, 09h
+                                       LEA           DX,msg_invalid_square
+                                       INT           21h
+                                       jmp           invalid_move
+
+    lll:                               
+                                       mov           ax , endSquareNumber
+                                       cmp           board[ax-1] , EMPTY
+                                       je            2222
+                                       MOV           AH, 09h
+                                       LEA           DX,  msg_end_square_occupied
+                                       INT           21h
+                                       jmp           invalid_move
+
+    2222:                              
+                                       mov           ax , StartSquareNumber
+                                       cmp           board[ax-1] , currentPlayer
+                                       je            3333
+                                       MOV           AH, 09h
+                                       LEA           DX,  msg_start_square_invalid
+                                       INT           21h
+                                       jmp           invalid_move
+
+
+    3333:                              
+                                       mov           ax , StartSquareNumber
+                                       cmp           board[ax-1] , EMPTY
+                                       je            4444
+                                       MOV           AH, 09h
+                                       LEA           DX,  msg_start_square_empty
+                                       INT           21h
+                                       jmp           invalid_move
+
+
+    4444:                              
+                                       mov           ax , StartSquareNumber
+                                       cmp           board[ax-1] , WHITE_PAWN
+                                       je            5555
+                                       mov           ax , StartSquareNumber
+                                       cmp           board[ax-1] , BLACK_PAWN
+                                       je            5555
+                                       MOV           AH, 09h
+                                       LEA           DX,  msg_invalid_piece
+                                       INT           21h
+                                       jmp           invalid_move
+
+
+    5555:                              
+                                       mov           ax , StartSquareNumber
+                                       mov           ax ,board[ax-1 ]
+                                       cmp           ax , WHITE_PAWN
+                                       jne           suit
+                                       mov           isWhitePawn , 1
+
+    suit:                              
+                                       mov           ax , endSquareNumber
+                                       mov           bx , startSquareNumber
+                                       sub           ax , bx
+                                       mov           moveDirection ,ax
+		
+		
+                                       mov           ax , isWhitePawn
+                                       cmp           ax , 0
+                                       jl            suit2
+                                       mov           ax , moveDirection
+                                       cmp           ax , 0
+                                       jge
+
+
+                                       suit2
+                                       mov           ax , !isWhitePawn
+                                       mov           ax , moveDirection
+                                       cmp           ax , 0
+                                       jg            suit4
+		
+                                       suit3
+                                       MOV           AH, 09h
+                                       LEA           DX,  msg_invalid_pawn_direction
+                                       INT           21h
+                                       jmp           invalid_move
+
+
+                                       suit4
+                                       mov           ax , ent_verifi
+                                       mov           ent_squaerstatei , ax
+                                       mov           ax , ent_verifi
+                                       mov           ent_squarestatej , ax
+		
+                                       call          getSquareState
+                                       push          ax
+                                       mov           ax , Sort_getSquareState
+                                       cmp           ax, currentQueen
+                                       pop           ax
+                                       jne           ................................
+                                       mov           ax , startSquareNumber
+                                       cmp           ax, 0
+                                       jne           enddddddddd
+                                       MOV           AH, 09h
+                                       LEA           DX, msg_invalid_square
+                                       INT           21h
+                                       jmp           invalid_move
+			
+                                       enddddddddddd
+			
+                                       mov           ax , endSquareNumber
+                                       cmp           board[ax-1] , EMPTY
+                                       je            ..................................
+                                       MOV           AH, 09h
+                                       LEA           DX,  msg_end_square_occupied
+                                       INT           21h
+                                       jmp           invalid_move
+
+
+                                       mov           ax , startSquareNumber
+                                       cmp           board[ax-1] , currentQueen
+                                       je            ..................................
+                                       MOV           AH, 09h
+                                       LEA           DX, msg_start_square_invalid2
+                                       INT           21h
+                                       jmp           invalid_move
+
+
+                                       mov           ax , startSquareNumber
+                                       cmp           board[ax-1] , EMPTY
+                                       jne           ..................................
+                                       MOV           AH, 09h
+                                       LEA           DX,msg_start_square_empty
+                                       INT           21h
+                                       jmp           invalid_move
+
+			
+                                       mov           ax , startSquareNumber
+                                       cmp           board[ax-1] ,WHITE_QUEEN
+                                       cmp           board[ax-1] ,BLACK_QUEEN
+                                       jne           .......................
+                                       MOV           AH, 09h
+                                       LEA           DX, msg_start_square_empty
+                                       INT           21h
+                                       jmp           invalid_move
+
+                                       mov           ax, endSquareNumber
+                                       call          getRow
+                                       sub           ax,startSquareNumber
+                                       cwd
+                                       div           abs(ax)
+                                       mov           rowDirection,ax
+			
+                                       mov           ax, endSquareNumber
+                                       call          getColumn
+                                       sub           ax,startSquareNumber
+                                       cwd
+                                       div           abs(ax)
+                                       mov           columnDirection,ax
+
+                                       mov           ax , startSquareNumber
+                                       call          getRow
+                                       add           ax,rowDirection
+                                       mov           row ,ax
+
+			
+                                       mov           ax , startSquareNumber
+                                       call          getColumn
+                                       add           ax,columnDirection
+                                       mov           column ,ax
+
+check_must_capture2 :
+                                       call          Mustcapture
+                                       mov           ax , sort_Mustcapture
+                                       cmp           ax , 0
+                                       jne           elseee
+                                       mov           ax, endSquareNumber
+                                       call          retRow
+                                       cmp           ax, row
+                                       jne           continue_while
+                                       mov           ax ,endSquareNumber
+                                       call          getColumn
+                                       cmp           ax,column
+                                       jne           continue_while
+                                       jmp           end_while
+    continue_while:                    
+                                       mov           ax,row
+                                       mov           bx,column
+                                       call          getSquareNumber
+                                       dec           ax
+                                       mov           dx, ax
+                                       cmp           board[dx-1],EMPTY
+                                       jne           .................
+                                       MOV           AH, 09h
+                                       LEA           DX, msg_invalid_pawn_direction
+                                       INT           21h
+                                       jmp           invalid_move
+    ;incrementation de row
+                                       mov           ax , row
+                                       add           ax , rowDirection
+                                       mov           row , ax
+			
+    ;incrementation de row
+                                       mov           ax , column
+                                       add           ax , columnDirection
+                                       mov           column , ax
+    elseee:                            
+                                       MOV           AH, 09h
+                                       LEA           DX,   msg_start_square_invalid2
+                                       INT           21h
+                                       jmp           exit
+			
+                                       MOV           AH, 09h
+                                       LEA           DX, msg_invalid_pawn_direction
+                                       INT           21h
+                                       jmp           exit
+exit:
+                                       pop           bp
+                                       ret           16
+verif endp
