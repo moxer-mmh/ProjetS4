@@ -1483,13 +1483,3 @@ int main()
 
     return 0;
 }
-// assembleur
-
-// verif
-// deplacer
-// verifqueens
-
-// main
-
-//***afficher***
-//***generateAImove***
