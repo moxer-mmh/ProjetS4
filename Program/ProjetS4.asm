@@ -1129,6 +1129,453 @@ verifqueens proc
                                                            ret
 verifqueens endp
 
+generateAIMove proc
+
+    ; Sauvegarder les valeurs des registres sur la pile
+                                                           push ax
+                                                           push bx
+                                                           push cx
+                                                           push dx
+                                                           push si
+                                                           push di
+                                                           push bp
+                                                           mov  bp, sp
+
+    ; Vérifier si mustcapture() renvoie 1
+                                                           call mustcapture
+                                                           mov  ax, sort_Mustcapture
+                                                           cmp  ax, 1
+                                                           jne  else_generateAIMove
+
+    ; obtenir les coordonnées de la case à partir de coor[0]
+                                                           mov  si, 0
+                                                           mov  ax, coor[si]
+                                                           mov  N, ax
+                                                           push si
+                                                           call getRow
+                                                           mov  ax, sort_getRow
+                                                           mov  ent_deplaceri, ax
+                                                           call getColumn
+                                                           mov  ax, sort_getColumn
+                                                           mov  ent_deplacerj, ax
+                                                           pop  si
+
+                                                           inc  si
+
+    ; obtenir les coordonnées de la case à partir de coor[1]
+
+                                                           mov  ax,coor[si]
+                                                           mov  N, ax
+                                                           call getRow
+                                                           mov  ax, sort_getRow
+                                                           mov  ent_deplacerx, ax
+                                                           call getColumn
+                                                           mov  ax, sort_getColumn
+                                                           mov  ent_deplacery, ax
+
+    ; appeler deplacer (i,j,x,y)
+                                                           call deplacer
+                                                           jmp  end_generateAIMove
+
+    else_generateAIMove:                                   
+    ; initialiser les variables
+                                                           xor  cx, cx
+                                                           mov  ent_deplaceri, cx
+                                                           mov  ent_deplacerj, cx
+                                                           mov  ent_deplacerx, cx
+                                                           mov  ent_deplacery, cx
+                                                           mov  validMove, cx
+
+    while_loop:                                            
+                                                           cmp  validMove, 0
+                                                           jne  end_while_loop
+
+    ; boucle for (si = 0; si < 50; si++)
+                                                           xor  si, si
+    for_loop:                                              
+                                                           cmp  si, 50
+                                                           jge  end_for_loop
+
+    ; vérifier si la case est black_pawn ou black_queen
+                                                           mov  al, board[si]
+                                                           cmp  al, BLACK_PAWN
+                                                           je   handle_black_pawn
+                                                           cmp  al, BLACK_QUEEN
+                                                           jne  next_iteration_generateAIMove
+
+    ; BLACK_QUEEN logic
+    handle_black_queen:                                    
+                                                           mov  ax, si
+                                                           inc  ax
+                                                           mov  N, ax
+                                                           push si
+                                                           call getRow
+                                                           mov  ax,sort_getRow
+                                                           mov  ent_deplaceri, ax
+                                                           call getColumn
+                                                           mov  ax, sort_getColumn
+                                                           mov  ent_deplacerj, ax
+                                                           pop  si
+
+    ; verifier les depalcements diagonaux
+                                                           mov  cx, 1
+    diagonal_loop:                                         
+                                                           cmp  cx, 10
+                                                           jge  next_iteration_generateAIMove
+
+    ; deplacement diagonal top-left
+                                                           mov  ax, ent_deplaceri
+                                                           add  ax, cx
+                                                           cmp  ax, 10
+                                                           jg   next_diagonal
+                                                           mov  bx, ent_deplacerj
+                                                           add  bx, cx
+                                                           cmp  bx, 10
+                                                           jg   next_diagonal
+
+                                                           push si
+                                                           mov  ent_squarenumberi, ax
+                                                           mov  ent_squarenumberj, bx
+                                                           call getSquareNumber
+                                                           pop  si
+                                                           mov  sort_getSquareNumber, ax
+                                                           dec  ax
+                                                           push si
+                                                           mov  si, ax
+                                                           mov  dl, board[si]
+                                                           pop  si
+                                                           cmp  dl, EMPTY
+                                                           jne  next_diagonal
+
+                                                           mov  ax, ent_deplaceri
+                                                           add  ax, cx
+                                                           mov  ent_deplacerx, ax
+                                                           mov  ax, ent_deplacerj
+                                                           add  ax, cx
+                                                           mov  ent_deplacery, ax
+
+                                                           mov  ax, ent_deplaceri
+                                                           mov  ent_verifi, ax
+                                                           mov  ax, ent_deplacerj
+                                                           mov  ent_verifj, ax
+                                                           mov  ax, ent_deplacerx
+                                                           mov  ent_verifx, ax
+                                                           mov  ax, ent_deplacery
+                                                           mov  ent_verify, ax
+
+                                                           push si
+                                                           call verif
+                                                           pop  si
+                                                           mov  ax, sort_verif
+                                                           cmp  ax, 1
+                                                           je   set_valid_move
+
+    ;deplacement diagonal top-right
+    next_diagonal:                                         
+                                                           mov  ax, ent_deplaceri
+                                                           add  ax, cx
+                                                           cmp  ax, 10
+                                                           jg   next_diagonal2
+                                                           mov  bx, ent_deplacerj
+                                                           sub  bx, cx
+                                                           cmp  bx, 1
+                                                           jl   next_diagonal2
+
+                                                           push si
+                                                           mov  ent_squarenumberi, ax
+                                                           mov  ent_squarenumberj, bx
+                                                           call getSquareNumber
+                                                           pop  si
+                                                           mov  sort_getSquareNumber, ax
+                                                           dec  ax
+                                                           push si
+                                                           mov  si, ax
+                                                           mov  dl, board[si]
+                                                           pop  si
+                                                           cmp  dl, EMPTY
+                                                           jne  next_diagonal2
+
+                                                           mov  ax, ent_deplaceri
+                                                           add  ax, cx
+                                                           mov  ent_deplacerx, ax
+                                                           mov  ax, ent_deplacerj
+                                                           sub  ax, cx
+                                                           mov  ent_deplacery, ax
+
+                                                           mov  ax, ent_deplaceri
+                                                           mov  ent_verifi, ax
+                                                           mov  ax, ent_deplacerj
+                                                           mov  ent_verifj, ax
+                                                           mov  ax, ent_deplacerx
+                                                           mov  ent_verifx, ax
+                                                           mov  ax, ent_deplacery
+                                                           mov  ent_verify, ax
+
+                                                           push si
+                                                           call verif
+                                                           pop  si
+                                                           mov  ax, sort_verif
+                                                           cmp  ax, 1
+                                                           je   set_valid_move
+
+    ; deplacement diagonal bottom-right
+    next_diagonal2:                                        
+                                                           mov  ax, ent_deplaceri
+                                                           sub  ax, cx
+                                                           cmp  ax, 1
+                                                           jl   next_diagonal3
+                                                           mov  bx, ent_deplacerj
+                                                           add  bx, cx
+                                                           cmp  bx, 10
+                                                           jg   next_diagonal3
+
+                                                           push si
+                                                           mov  ent_squarenumberi, ax
+                                                           mov  ent_squarenumberj, bx
+                                                           call getSquareNumber
+                                                           pop  si
+                                                           mov  sort_getSquareNumber, ax
+                                                           dec  ax
+                                                           push si
+                                                           mov  si, ax
+                                                           mov  dl, board[si]
+                                                           pop  si
+                                                           cmp  dl, EMPTY
+                                                           jne  next_diagonal3
+
+                                                           mov  ax, ent_deplaceri
+                                                           sub  ax, cx
+                                                           mov  ent_deplacerx, ax
+                                                           mov  ax, ent_deplacerj
+                                                           add  ax, cx
+                                                           mov  ent_deplacery, ax
+
+                                                           mov  ax, ent_deplaceri
+                                                           mov  ent_verifi, ax
+                                                           mov  ax, ent_deplacerj
+                                                           mov  ent_verifj, ax
+                                                           mov  ax, ent_deplacerx
+                                                           mov  ent_verifx, ax
+                                                           mov  ax, ent_deplacery
+                                                           mov  ent_verify, ax
+
+                                                           push si
+                                                           call verif
+                                                           pop  si
+                                                           mov  ax, sort_verif
+                                                           cmp  ax, 1
+                                                           je   set_valid_move
+
+    ; deplacement diagonal bottom-left
+    next_diagonal3:                                        
+                                                           mov  ax, ent_deplaceri
+                                                           sub  ax, cx
+                                                           cmp  ax, 1
+                                                           jl   next_iteration_generateAIMove
+                                                           mov  bx, ent_deplacerj
+                                                           sub  bx, cx
+                                                           cmp  bx, 1
+                                                           jl   next_iteration_generateAIMove
+
+                                                           push si
+                                                           mov  ent_squarenumberi, ax
+                                                           mov  ent_squarenumberj, bx
+                                                           call getSquareNumber
+                                                           pop  si
+                                                           mov  sort_getSquareNumber, ax
+                                                           dec  ax
+                                                           push si
+                                                           mov  si, ax
+                                                           mov  dl, board[si]
+                                                           pop  si
+                                                           cmp  dl, EMPTY
+                                                           jne  next_iteration_generateAIMove
+
+                                                           mov  ax, ent_deplaceri
+                                                           sub  ax, cx
+                                                           mov  ent_deplacerx, ax
+                                                           mov  ax, ent_deplacerj
+                                                           sub  ax, cx
+                                                           mov  ent_deplacery, ax
+
+                                                           mov  ax, ent_deplaceri
+                                                           mov  ent_verifi, ax
+                                                           mov  ax, ent_deplacerj
+                                                           mov  ent_verifj, ax
+                                                           mov  ax, ent_deplacerx
+                                                           mov  ent_verifx, ax
+                                                           mov  ax, ent_deplacery
+                                                           mov  ent_verify, ax
+
+                                                           push si
+                                                           call verif
+                                                           pop  si
+                                                           mov  ax, sort_verif
+                                                           cmp  ax, 1
+                                                           je   set_valid_move
+
+                                                           inc  cx
+                                                           jmp  diagonal_loop
+
+
+    ; la prochaine iteration
+    next_iteration_generateAIMove:                         
+                                                           inc  si
+                                                           jmp  for_loop
+
+    ;le saut vers la fin
+    end_for_loop:                                          
+                                                           jmp  while_loop
+
+    ;mise à jour de la variable validMove
+    set_valid_move:                                        
+                                                           mov  validMove, 1
+                                                           jmp  end_while_loop
+
+    ; BLACK_PAWN logic
+    handle_black_pawn:                                     
+                                                           mov  ax, si
+                                                           inc  ax
+                                                           mov  N, ax
+                                                           push si
+                                                           call getRow
+                                                           mov  ax, sort_getRow
+                                                           mov  ent_deplaceri, ax
+                                                           call getColumn
+                                                           mov  ax, sort_getColumn
+                                                           mov  ent_deplacerj, ax
+                                                           pop  si
+
+                                                           mov  ax, ent_deplaceri
+                                                           cmp  ax,10
+                                                           jge  check_pawn_right
+                                                           mov  ax,ent_deplacerj
+                                                           cmp  ax,1
+                                                           jle  check_pawn_right
+
+
+    ; verifier move i + 1, j - 1
+                                                           mov  ax, ent_deplaceri
+                                                           inc  ax
+                                                           mov  ent_squarenumberi, ax
+                                                           mov  ax, ent_deplacerj
+                                                           dec  ax
+                                                           mov  ent_squarenumberj, ax
+
+                                                           push si
+                                                           call getSquareNumber
+                                                           pop  si
+                                                           mov  sort_getSquareNumber, ax
+                                                           dec  ax
+                                                           push si
+                                                           mov  si, ax
+                                                           mov  dl, board[si]
+                                                           pop  si
+                                                           cmp  dl, EMPTY
+                                                           jne  check_pawn_right
+
+                                                           mov  ax, ent_deplaceri
+                                                           inc  ax
+                                                           mov  ent_deplacerx, ax
+                                                           mov  ax, ent_deplacerj
+                                                           dec  ax
+                                                           mov  ent_deplacery, ax
+
+                                                           mov  ax, ent_deplaceri
+                                                           mov  ent_verifi , ax
+
+                                                           mov  ax, ent_deplacerj
+                                                           mov  ent_verifj , ax
+
+                                                           mov  ax, ent_deplacerx
+                                                           mov  ent_verifx , ax
+
+                                                           mov  ax, ent_deplacery
+                                                           mov  ent_verify , ax
+
+                                                           push si
+                                                           call verif
+                                                           pop  si
+                                                           mov  ax,sort_verif
+
+                                                           cmp  ax, 1
+                                                           je   set_valid_move
+
+    ; verifier move i + 1, j + 1
+    check_pawn_right:                                      
+
+                                                           mov  ax, ent_deplaceri
+                                                           cmp  ax,10
+                                                           jge  next_iteration_generateAIMove
+                                                           mov  ax,ent_deplacerj
+                                                           cmp  ax,10
+                                                           jge  next_iteration_generateAIMove
+
+                                                           mov  ax, ent_deplaceri
+                                                           inc  ax
+                                                           mov  ent_squarenumberi, ax
+                                                           mov  ax, ent_deplacerj
+                                                           inc  ax
+                                                           mov  ent_squarenumberj, ax
+
+                                                           push si
+                                                           call getSquareNumber
+                                                           pop  si
+                                                           mov  sort_getSquareNumber, ax
+                                                           dec  ax
+                                                           push si
+                                                           mov  si, ax
+                                                           mov  dl, board[si]
+                                                           pop  si
+                                                           cmp  dl, EMPTY
+                                                           jne  next_iteration_generateAIMove
+
+
+                                                           mov  ax, ent_deplaceri
+                                                           inc  ax
+                                                           mov  ent_deplacerx, ax
+                                                           mov  ax, ent_deplacerj
+                                                           inc  ax
+                                                           mov  ent_deplacery, ax
+
+                                                           mov  ax, ent_deplaceri
+                                                           mov  ent_verifi , ax
+
+                                                           mov  ax, ent_deplacerj
+                                                           mov  ent_verifj , ax
+
+                                                           mov  ax, ent_deplacerx
+                                                           mov  ent_verifx , ax
+
+                                                           mov  ax, ent_deplacery
+                                                           mov  ent_verify , ax
+
+                                                           push si
+                                                           call verif
+                                                           pop  si
+                                                           mov  ax,sort_verif
+
+                                                           cmp  ax, 1
+                                                           je   set_valid_move
+                                                           jmp  next_iteration_generateAIMove
+
+    end_while_loop:                                        
+    ; Call deplacer(i, j, x, y)
+                                                           call deplacer
+
+    end_generateAIMove:                                    
+    ; Restaurer les valeurs des registres depuis la pile
+                                                           pop  bp
+                                                           pop  di
+                                                           pop  si
+                                                           pop  dx
+                                                           pop  cx
+                                                           pop  bx
+                                                           pop  ax
+                                                           ret
+
+generateAIMove endp
+
 Mustcapture proc
 
                                                            push ax
