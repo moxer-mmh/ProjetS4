@@ -4715,6 +4715,10 @@ deplacer proc
                                                            ret
 deplacer endp
 
+verif proc
+							   ret
+verif endp
+
 generateAIMove proc
 
     ; Sauvegarder les valeurs des registres sur la pile
